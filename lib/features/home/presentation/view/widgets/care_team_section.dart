@@ -1,0 +1,142 @@
+import 'package:flutter/material.dart';
+import 'package:medical_follow_up_app/core/theme/app_icons.dart';
+import 'package:medical_follow_up_app/core/utils/colors.dart';
+
+class CareTeamSection extends StatelessWidget {
+  const CareTeamSection({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    // You can later inject this from a ViewModel / repository
+    final doctors = [
+      {
+        'name': 'Dr. Ahmed Hassan',
+        'specialty': 'Cardiologist',
+        'rating': '4.9',
+      },
+      {
+        'name': 'Dr. Sara Ali',
+        'specialty': 'Endocrinologist',
+        'rating': '4.8',
+      },
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Section header
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Your care team',
+              style: theme.textTheme.titleLarge,
+            ),
+            TextButton(
+              onPressed: () {
+                // TODO: navigate to full doctors list
+              },
+              child: const Text('See all'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 150,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: doctors.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            itemBuilder: (context, index) {
+              final doctor = doctors[index];
+              return _DoctorCard(doctor: doctor);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _DoctorCard extends StatelessWidget {
+  final Map<String, String> doctor;
+
+  const _DoctorCard({required this.doctor});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return SizedBox(
+      width: 180,
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Avatar + favorite icon
+              Row(
+                children: [
+                   CircleAvatar(
+                    radius: 18,
+                    backgroundColor: HealtecColors.primary,
+                    child: Icon(
+                      AppIcons.profileFilled,
+                      size: 18,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: () {
+                      // TODO: favorite toggle
+                    },
+                    icon:  Icon(
+                      AppIcons.heart,
+                      size: 18,
+                    ),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              // Doctor name
+              Text(
+                doctor['name']!,
+                style: theme.textTheme.bodyLarge,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 4),
+              // Doctor specialty
+              Text(
+                doctor['specialty']!,
+                style: theme.textTheme.bodySmall,
+              ),
+              const Spacer(),
+              // Rating row
+              Row(
+                children: [
+                   Icon(
+                    AppIcons.starFilled,
+                    size: 14,
+                    color: Colors.amber,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    doctor['rating']!,
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
