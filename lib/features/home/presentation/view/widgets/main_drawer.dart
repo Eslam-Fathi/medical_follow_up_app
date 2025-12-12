@@ -4,6 +4,7 @@ import 'package:medical_follow_up_app/core/utils/colors.dart';
 import 'package:medical_follow_up_app/features/home/presentation/view/widgets/drawer_card.dart';
 import 'package:medical_follow_up_app/features/home/presentation/view/widgets/drawer_item.dart';
 import 'package:medical_follow_up_app/features/home/presentation/view/widgets/logout_card.dart';
+import 'package:medical_follow_up_app/features/home/presentation/view/widgets/profile_card.dart';
 
 class MainDrawer extends StatelessWidget {
   const MainDrawer({super.key});
@@ -14,6 +15,7 @@ class MainDrawer extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     return Drawer(
+      
       // Slightly tinted background like the home screen
       backgroundColor:
           isDark ? HealtecColors.darkBackground : HealtecColors.background,
@@ -33,64 +35,13 @@ class MainDrawer extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
+                  
                 ],
               ),
               const SizedBox(height: 16),
 
               // Profile card
-              Card(
-                color: isDark
-                    ? HealtecColors.darkSurface
-                    : Colors.white, // light card
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  child: Row(
-                    children: [
-                       CircleAvatar(
-                        radius: 24,
-                        backgroundColor: HealtecColors.primary,
-                        child: Icon(
-                          AppIcons.profileFilled,
-                          color: Colors.white,
-                          size: 22,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Eslam Fathi',
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'Patient ID: 123456',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: isDark
-                                    ? HealtecColors.darkTextSecondary
-                                    : HealtecColors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              ProfileCard(isDark: isDark, theme: theme),
 
               const SizedBox(height: 24),
 
@@ -194,4 +145,3 @@ class MainDrawer extends StatelessWidget {
     );
   }
 }
-

@@ -45,7 +45,7 @@ class _HomeFollowUpScreenState extends State<HomeFollowUpScreen> {
             )
           : null,
 
-      // End drawer only on mobile (like your example)
+      // End drawer only on mobile (to show care team)
       endDrawer: isMobile
           ? SizedBox(
               width: MediaQuery.of(context).size.width * 0.8,
@@ -109,7 +109,7 @@ class _HomeFollowUpScreenState extends State<HomeFollowUpScreen> {
     );
   }
 
-  // ====== DESKTOP LAYOUT (side-by-side like your MainScreen example) ======
+  // ====== DESKTOP LAYOUT (side-by-side) ======
   Widget _buildDesktopLayout(BuildContext context) {
     return Row(
       children: [
