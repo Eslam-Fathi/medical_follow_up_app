@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:medical_follow_up_app/core/theme/app_icons.dart';
 import 'package:medical_follow_up_app/core/utils/colors.dart';
+import 'package:medical_follow_up_app/features/doctors/data/models/doctor_model/doctor_model.dart';
+import 'package:medical_follow_up_app/features/doctors/presentation/view/care_team_detail_screen.dart';
 
 class CareTeamSection extends StatelessWidget {
   const CareTeamSection({super.key});
@@ -69,71 +71,90 @@ class _DoctorCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return SizedBox(
-      width: 180,
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Avatar + favorite icon
-              Row(
-                children: [
-                   CircleAvatar(
-                    radius: 18,
-                    backgroundColor: HealtecColors.primary,
-                    child: Icon(
-                      AppIcons.profileFilled,
-                      size: 18,
-                      color: Colors.white,
+    return GestureDetector(
+      onTap: () {
+        // Create a DoctorModel from the Map data
+        final doctorModel = DoctorModel(
+          id: doctor['id'] ?? '1',
+          name: doctor['name'] ?? '',
+          specialty: doctor['specialty'] ?? '',
+          rating: doctor['rating'] ?? '0',
+          reviewCount: doctor['reviewCount'] ?? '0',
+          patientsCount: doctor['patientsCount'] ?? '0+',
+          yearsExperience: doctor['yearsExperience'] ?? '0',
+          aboutMe: doctor['aboutMe'] ??
+              'Experienced healthcare professional dedicated to providing quality medical care.',
+        );
+
+        // Navigate to detail screen
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => CareTeamDetailScreen(doctor: doctorModel),
+          ),
+        );
+      },
+      child: SizedBox(
+        width: 180,
+        child: Card(
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                     CircleAvatar(
+                      radius: 18,
+                      backgroundColor: HealtecColors.primary,
+                      child: Icon(
+                        AppIcons.profileFilled,
+                        size: 18,
+                        color: Colors.white,
+                      ),
                     ),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: () {
-                      // TODO: favorite toggle
-                    },
-                    icon:  Icon(
-                      AppIcons.heart,
-                      size: 18,
+                    const Spacer(),
+                    IconButton(
+                      onPressed: () {
+                        // TODO: favorite toggle
+                      },
+                      icon:  Icon(
+                        AppIcons.heart,
+                        size: 18,
+                      ),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
                     ),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              // Doctor name
-              Text(
-                doctor['name']!,
-                style: theme.textTheme.bodyLarge,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 4),
-              // Doctor specialty
-              Text(
-                doctor['specialty']!,
-                style: theme.textTheme.bodySmall,
-              ),
-              const Spacer(),
-              // Rating row
-              Row(
-                children: [
-                   Icon(
-                    AppIcons.starFilled,
-                    size: 14,
-                    color: Colors.amber,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    doctor['rating']!,
-                    style: theme.textTheme.bodySmall,
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  doctor['name']!,
+                  style: theme.textTheme.bodyLarge,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  doctor['specialty']!,
+                  style: theme.textTheme.bodySmall,
+                ),
+                const Spacer(),
+                Row(
+                  children: [
+                     Icon(
+                      AppIcons.starFilled,
+                      size: 14,
+                      color: Colors.amber,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      doctor['rating']!,
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

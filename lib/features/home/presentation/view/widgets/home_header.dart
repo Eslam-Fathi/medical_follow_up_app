@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:medical_follow_up_app/core/theme/app_icons.dart';
 import 'package:medical_follow_up_app/core/utils/colors.dart';
+import 'package:medical_follow_up_app/core/utils/responsive.dart';
 
 class HomeHeader extends StatelessWidget {
   final VoidCallback? onMenuPressed;
@@ -15,6 +16,7 @@ class HomeHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDeskTop = Responsive.isDesktop(context);
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -22,6 +24,9 @@ class HomeHeader extends StatelessWidget {
         Row(
           children: [
             // Menu icon (opens left drawer)
+            isDeskTop
+                ? const SizedBox.shrink()
+                :
             IconButton(
               icon:  Icon(AppIcons.menu),
               onPressed: onMenuPressed,
@@ -46,7 +51,10 @@ class HomeHeader extends StatelessWidget {
         Row(
           children: [
             // Care team icon (opens end drawer)
-            IconButton(
+            isDeskTop
+                ? const SizedBox.shrink()
+                :
+             IconButton(
               onPressed: onCareTeamPressed,
               icon:  Icon(AppIcons.heart), // or AppIcons.activity / people icon
               tooltip: 'Your care team',

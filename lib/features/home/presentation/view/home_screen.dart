@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:medical_follow_up_app/core/theme/app_icons.dart';
 import 'package:medical_follow_up_app/core/utils/colors.dart';
 import 'package:medical_follow_up_app/core/utils/responsive.dart';
+import 'package:medical_follow_up_app/features/home/presentation/view/widgets/drawer_content_widget.dart';
 
 import 'widgets/home_header.dart';
 import 'widgets/search_and_filter_row.dart';
@@ -29,6 +30,7 @@ class _HomeFollowUpScreenState extends State<HomeFollowUpScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
     final isDesktop = Responsive.isDesktop(context);
     final isMobile = Responsive.isMobile(context);
@@ -45,7 +47,7 @@ class _HomeFollowUpScreenState extends State<HomeFollowUpScreen> {
             )
           : null,
 
-      // End drawer only on mobile (like your example)
+      // End drawer only on mobile (to show care team)
       endDrawer: isMobile
           ? SizedBox(
               width: MediaQuery.of(context).size.width * 0.8,
@@ -109,18 +111,22 @@ class _HomeFollowUpScreenState extends State<HomeFollowUpScreen> {
     );
   }
 
-  // ====== DESKTOP LAYOUT (side-by-side like your MainScreen example) ======
+  // ====== DESKTOP LAYOUT (side-by-side) ======
   Widget _buildDesktopLayout(BuildContext context) {
+     final theme = Theme.of(context);
+   
+     final isDark = theme.brightness == Brightness.dark;
     return Row(
       children: [
         // LEFT: fixed side menu (MainDrawer content)
         Expanded(
           flex: 2,
           child: Container(
+            
             color: Theme.of(context).brightness == Brightness.dark
                 ? HealtecColors.darkSurface
                 : Colors.white,
-            child: const MainDrawer(), // you might want a "panel" version later
+            child: DrawerContentWidget(theme: theme, isDark: isDark), 
           ),
         ),
 
