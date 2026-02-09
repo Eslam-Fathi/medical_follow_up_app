@@ -105,7 +105,7 @@ class _DoctorCard extends StatelessWidget {
                   children: [
                      CircleAvatar(
                       radius: 18,
-                      backgroundColor: HealtecColors.primary,
+                      backgroundColor: HealthCareColors.primary,
                       child: Icon(
                         AppIcons.profileFilled,
                         size: 18,

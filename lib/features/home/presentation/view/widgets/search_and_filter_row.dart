@@ -17,7 +17,7 @@ class SearchAndFilterRow extends StatelessWidget {
               hintText: 'Search follow-up checks',
               prefixIcon:  Icon(AppIcons.search),
               hintStyle: theme.textTheme.bodyMedium?.copyWith(
-                color: HealtecColors.textSecondary.withOpacity(
+                color: HealthCareColors.textSecondary.withOpacity(
                   theme.brightness == Brightness.dark ? 0.7 : 1,
                 ),
               ),

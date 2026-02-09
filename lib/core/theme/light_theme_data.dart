@@ -1,6 +1,6 @@
 // theme.dart
 import 'package:flutter/material.dart';
-import 'package:medical_follow_up_app/core/utils/colors.dart' show AppColors, HealtecColors;
+import 'package:medical_follow_up_app/core/utils/colors.dart' show AppColors, HealthCareColors;
 
 
 
@@ -9,27 +9,27 @@ import 'package:medical_follow_up_app/core/utils/colors.dart' show AppColors, He
 final ThemeData healtecLightTheme = ThemeData(
   brightness: Brightness.light,
   useMaterial3: true,
-  primaryColor: HealtecColors.primary,
-  scaffoldBackgroundColor: HealtecColors.background,
+  primaryColor: HealthCareColors.primary,
+  scaffoldBackgroundColor: HealthCareColors.background,
   
   colorScheme: ColorScheme.light(
-    primary: HealtecColors.primary,
-    primaryContainer: HealtecColors.primaryLight,
-    secondary: HealtecColors.primaryLighter,
-    tertiary: HealtecColors.accent,
+    primary: HealthCareColors.primary,
+    primaryContainer: HealthCareColors.primaryLight,
+    secondary: HealthCareColors.primaryLighter,
+    tertiary: HealthCareColors.accent,
     surface: Colors.white,
-    background: HealtecColors.background,
+    background: HealthCareColors.background,
     error: const Color(0xFFEF4444),
     onPrimary: Colors.white,
-    onSecondary: HealtecColors.textPrimary,
-    onTertiary: HealtecColors.textPrimary,
-    onSurface: HealtecColors.textPrimary,
-    onBackground: HealtecColors.textPrimary,
+    onSecondary: HealthCareColors.textPrimary,
+    onTertiary: HealthCareColors.textPrimary,
+    onSurface: HealthCareColors.textPrimary,
+    onBackground: HealthCareColors.textPrimary,
     onError: Colors.white,
   ),
   
   appBarTheme: const AppBarTheme(
-    backgroundColor: HealtecColors.primary,
+    backgroundColor: HealthCareColors.primary,
     foregroundColor: Colors.white,
     elevation: 0,
     centerTitle: true,
@@ -41,7 +41,7 @@ final ThemeData healtecLightTheme = ThemeData(
   ),
   
   cardTheme: CardThemeData(
-    color: HealtecColors.cardBackground,
+    color: HealthCareColors.cardBackground,
     elevation: 2,
     shadowColor: Colors.black.withOpacity(0.08),
     shape: RoundedRectangleBorder(
@@ -52,7 +52,7 @@ final ThemeData healtecLightTheme = ThemeData(
   
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(
-      backgroundColor: HealtecColors.primary,
+      backgroundColor: HealthCareColors.primary,
       foregroundColor: Colors.white,
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -68,9 +68,9 @@ final ThemeData healtecLightTheme = ThemeData(
   
   outlinedButtonTheme: OutlinedButtonThemeData(
     style: OutlinedButton.styleFrom(
-      foregroundColor: HealtecColors.primary,
+      foregroundColor: HealthCareColors.primary,
       side: const BorderSide(
-        color: HealtecColors.primary,
+        color: HealthCareColors.primary,
         width: 1.5,
       ),
       shape: RoundedRectangleBorder(
@@ -84,47 +84,47 @@ final ThemeData healtecLightTheme = ThemeData(
     displayLarge: TextStyle(
       fontSize: 32,
       fontWeight: FontWeight.bold,
-      color: HealtecColors.textPrimary,
+      color: HealthCareColors.textPrimary,
     ),
     displayMedium: TextStyle(
       fontSize: 28,
       fontWeight: FontWeight.bold,
-      color: HealtecColors.textPrimary,
+      color: HealthCareColors.textPrimary,
     ),
     headlineLarge: TextStyle(
       fontSize: 24,
       fontWeight: FontWeight.bold,
-      color: HealtecColors.textPrimary,
+      color: HealthCareColors.textPrimary,
     ),
     headlineMedium: TextStyle(
       fontSize: 20,
       fontWeight: FontWeight.w600,
-      color: HealtecColors.textPrimary,
+      color: HealthCareColors.textPrimary,
     ),
     titleLarge: TextStyle(
       fontSize: 18,
       fontWeight: FontWeight.w600,
-      color: HealtecColors.textPrimary,
+      color: HealthCareColors.textPrimary,
     ),
     bodyLarge: TextStyle(
       fontSize: 16,
       fontWeight: FontWeight.w500,
-      color: HealtecColors.textPrimary,
+      color: HealthCareColors.textPrimary,
     ),
     bodyMedium: TextStyle(
       fontSize: 14,
       fontWeight: FontWeight.w400,
-      color: HealtecColors.textPrimary,
+      color: HealthCareColors.textPrimary,
     ),
     bodySmall: TextStyle(
       fontSize: 12,
       fontWeight: FontWeight.w400,
-      color: HealtecColors.textSecondary,
+      color: HealthCareColors.textSecondary,
     ),
     labelLarge: TextStyle(
       fontSize: 14,
       fontWeight: FontWeight.w600,
-      color: HealtecColors.textPrimary,
+      color: HealthCareColors.textPrimary,
     ),
   ),
   
@@ -135,32 +135,32 @@ final ThemeData healtecLightTheme = ThemeData(
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(12),
       borderSide: const BorderSide(
-        color: HealtecColors.borderLight,
+        color: HealthCareColors.borderLight,
       ),
     ),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(12),
       borderSide: const BorderSide(
-        color: HealtecColors.borderLight,
+        color: HealthCareColors.borderLight,
       ),
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(12),
       borderSide: const BorderSide(
-        color: HealtecColors.primary,
+        color: HealthCareColors.primary,
         width: 2,
       ),
     ),
     hintStyle: const TextStyle(
-      color: HealtecColors.textSecondary,
+      color: HealthCareColors.textSecondary,
       fontSize: 14,
     ),
   ),
   
   bottomNavigationBarTheme: const BottomNavigationBarThemeData(
     backgroundColor: Colors.white,
-    selectedItemColor: HealtecColors.primary,
-    unselectedItemColor: HealtecColors.textSecondary,
+    selectedItemColor: HealthCareColors.primary,
+    unselectedItemColor: HealthCareColors.textSecondary,
     elevation: 8,
     type: BottomNavigationBarType.fixed,
   ),

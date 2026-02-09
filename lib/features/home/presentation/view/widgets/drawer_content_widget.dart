@@ -23,8 +23,8 @@ class DrawerContentWidget extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: isDark
-              ? HealtecColors.darkBackground
-              : HealtecColors.background,
+              ? HealthCareColors.darkBackground
+              : HealthCareColors.background,
         ),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
@@ -56,8 +56,8 @@ class DrawerContentWidget extends StatelessWidget {
                 'General',
                 style: theme.textTheme.labelLarge?.copyWith(
                   color: isDark
-                      ? HealtecColors.darkTextSecondary
-                      : HealtecColors.textSecondary,
+                      ? HealthCareColors.darkTextSecondary
+                      : HealthCareColors.textSecondary,
                   letterSpacing: 0.4,
                 ),
               ),
@@ -91,8 +91,8 @@ class DrawerContentWidget extends StatelessWidget {
                 'Health',
                 style: theme.textTheme.labelLarge?.copyWith(
                   color: isDark
-                      ? HealtecColors.darkTextSecondary
-                      : HealtecColors.textSecondary,
+                      ? HealthCareColors.darkTextSecondary
+                      : HealthCareColors.textSecondary,
                   letterSpacing: 0.4,
                 ),
               ),

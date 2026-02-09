@@ -114,7 +114,7 @@ class _StatusPill extends StatelessWidget {
       bg = Colors.green.withOpacity(0.12);
       fg = Colors.green.shade700;
     } else {
-      bg = HealtecColors.accent.withOpacity(0.18);
+      bg = HealthCareColors.accent.withOpacity(0.18);
       fg = Colors.orange.shade800;
     }
 

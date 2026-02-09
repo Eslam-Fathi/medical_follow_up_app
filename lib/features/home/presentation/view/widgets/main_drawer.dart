@@ -21,7 +21,7 @@ class MainDrawer extends StatelessWidget {
       
       // Slightly tinted background like the home screen
       backgroundColor:
-          isDark ? HealtecColors.darkBackground : HealtecColors.background,
+          isDark ? HealthCareColors.darkBackground : HealthCareColors.background,
       child: DrawerContentWidget(theme: theme, isDark: isDark),
     );
   }

@@ -41,7 +41,7 @@ class HomeHeader extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Welcome, Eslam',
+                  'Welcome, Ahmed',
                   style: theme.textTheme.headlineMedium,
                 ),
               ],
@@ -68,7 +68,7 @@ class HomeHeader extends StatelessWidget {
             const SizedBox(width: 4),
              CircleAvatar(
               radius: 18,
-              backgroundColor: HealtecColors.primary,
+              backgroundColor: HealthCareColors.primary,
               child: Icon(
                 AppIcons.profileFilled,
                 color: Colors.white,

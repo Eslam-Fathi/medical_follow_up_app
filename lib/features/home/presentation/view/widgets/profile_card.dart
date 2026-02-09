@@ -16,7 +16,7 @@ class ProfileCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       color: isDark
-          ? HealtecColors.darkSurface
+          ? HealthCareColors.darkSurface
           : Colors.white, // light card
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -29,7 +29,7 @@ class ProfileCard extends StatelessWidget {
           children: [
              CircleAvatar(
               radius: 24,
-              backgroundColor: HealtecColors.primary,
+              backgroundColor: HealthCareColors.primary,
               child: Icon(
                 AppIcons.profileFilled,
                 color: Colors.white,
@@ -42,7 +42,7 @@ class ProfileCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Eslam Fathi',
+                    'Ahmed Mohamed',
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -52,8 +52,8 @@ class ProfileCard extends StatelessWidget {
                     'Patient ID: 123456',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: isDark
-                          ? HealtecColors.darkTextSecondary
-                          : HealtecColors.textSecondary,
+                          ? HealthCareColors.darkTextSecondary
+                          : HealthCareColors.textSecondary,
                     ),
                   ),
                 ],

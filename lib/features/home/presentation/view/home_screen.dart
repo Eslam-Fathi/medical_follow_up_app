@@ -124,7 +124,7 @@ class _HomeFollowUpScreenState extends State<HomeFollowUpScreen> {
           child: Container(
             
             color: Theme.of(context).brightness == Brightness.dark
-                ? HealtecColors.darkSurface
+                ? HealthCareColors.darkSurface
                 : Colors.white,
             child: DrawerContentWidget(theme: theme, isDark: isDark), 
           ),
@@ -171,7 +171,7 @@ class _HomeFollowUpScreenState extends State<HomeFollowUpScreen> {
           flex: 3,
           child: Container(
             color: Theme.of(context).brightness == Brightness.dark
-                ? HealtecColors.darkSurface
+                ? HealthCareColors.darkSurface
                 : Colors.white,
             child: const SafeArea(
               child: Padding(

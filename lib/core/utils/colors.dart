@@ -11,7 +11,7 @@ class AppColors {
 
 // healtec_colors.dart
 
-class HealtecColors {
+class HealthCareColors {
   // Light Theme Colors
   static const Color primary = Color(0xFF6366F1);
   static const Color primaryLight = Color(0xFF818CF8);

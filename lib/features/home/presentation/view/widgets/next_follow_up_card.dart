@@ -12,8 +12,8 @@ class NextFollowUpCard extends StatelessWidget {
 
     return Card(
       color: isDark
-          ? HealtecColors.darkCardBackground
-          : HealtecColors.primaryLighter.withOpacity(0.35),
+          ? HealthCareColors.darkCardBackground
+          : HealthCareColors.primaryLighter.withOpacity(0.35),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(
@@ -27,8 +27,8 @@ class NextFollowUpCard extends StatelessWidget {
                     'Next follow-up',
                     style: theme.textTheme.titleLarge?.copyWith(
                       color: isDark
-                          ? HealtecColors.darkTextPrimary
-                          : HealtecColors.textPrimary,
+                          ? HealthCareColors.darkTextPrimary
+                          : HealthCareColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -87,14 +87,14 @@ class NextFollowUpCard extends StatelessWidget {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: isDark
-                    ? HealtecColors.darkSurface
+                    ? HealthCareColors.darkSurface
                     : Colors.white.withOpacity(0.9),
                 borderRadius: BorderRadius.circular(16),
               ),
               child:  Icon(
                 AppIcons.activity,
                 size: 32,
-                color: HealtecColors.primary,
+                color: HealthCareColors.primary,
               ),
             ),
           ],

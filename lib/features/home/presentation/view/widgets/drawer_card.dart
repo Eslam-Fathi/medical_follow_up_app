@@ -13,14 +13,14 @@ class DrawerCard extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     return Card(
-      color: isDark ? HealtecColors.darkSurface : Colors.white,
+      color: isDark ? HealthCareColors.darkSurface : Colors.white,
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(18),
         side: BorderSide(
           color: isDark
-              ? HealtecColors.darkBorder
-              : HealtecColors.borderLight.withOpacity(0.7),
+              ? HealthCareColors.darkBorder
+              : HealthCareColors.borderLight.withOpacity(0.7),
         ),
       ),
       child: Column(
@@ -32,8 +32,8 @@ class DrawerCard extends StatelessWidget {
                 height: 1,
                 thickness: 0.7,
                 color: isDark
-                    ? HealtecColors.darkBorder
-                    : HealtecColors.borderLight.withOpacity(0.6),
+                    ? HealthCareColors.darkBorder
+                    : HealthCareColors.borderLight.withOpacity(0.6),
               ),
             children[i],
           ],

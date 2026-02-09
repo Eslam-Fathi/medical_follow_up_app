@@ -31,14 +31,14 @@ class FilterChipsRow extends StatelessWidget {
             child: ChoiceChip(
               label: Text(filters[index]),
               selected: selected,
-              selectedColor: HealtecColors.primary,
+              selectedColor: HealthCareColors.primary,
               backgroundColor: theme.cardColor,
               labelStyle: TextStyle(
                 color: selected
                     ? Colors.white
                     : (theme.brightness == Brightness.dark
-                        ? HealtecColors.darkTextPrimary
-                        : HealtecColors.textPrimary),
+                        ? HealthCareColors.darkTextPrimary
+                        : HealthCareColors.textPrimary),
                 fontWeight: FontWeight.w500,
               ),
               shape: RoundedRectangleBorder(
@@ -47,8 +47,8 @@ class FilterChipsRow extends StatelessWidget {
                   color: selected
                       ? Colors.transparent
                       : (theme.brightness == Brightness.dark
-                          ? HealtecColors.darkBorder
-                          : HealtecColors.borderLight),
+                          ? HealthCareColors.darkBorder
+                          : HealthCareColors.borderLight),
                 ),
               ),
               onSelected: (_) => onFilterSelected(index),
