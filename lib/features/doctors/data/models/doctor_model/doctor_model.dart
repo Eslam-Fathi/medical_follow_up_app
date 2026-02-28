@@ -21,3 +21,13 @@ class DoctorModel {
     this.imageUrl = '',
   });
 }
+
+
+
+
+// class DoctorDaySchedule {
+//   final String day;
+//   final String timeRange; // e.g. "09:00 - 13:00" or "Off"
+
+//   DoctorDaySchedule({required this.day, required this.timeRange});
+// }

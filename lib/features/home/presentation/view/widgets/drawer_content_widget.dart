@@ -5,21 +5,28 @@ import 'package:medical_follow_up_app/features/home/presentation/view/widgets/dr
 import 'package:medical_follow_up_app/features/home/presentation/view/widgets/drawer_item.dart';
 import 'package:medical_follow_up_app/features/home/presentation/view/widgets/logout_card.dart';
 import 'package:medical_follow_up_app/features/home/presentation/view/widgets/profile_card.dart';
-
 class DrawerContentWidget extends StatelessWidget {
   const DrawerContentWidget({
     super.key,
     required this.theme,
     required this.isDark,
+    required this.userName,
+    required this.userEmail,
+    required this.userRole,
+    required this.onLogout,
   });
 
   final ThemeData theme;
   final bool isDark;
 
+  final String userName;
+  final String userEmail;
+  final String userRole;
+  final VoidCallback onLogout;
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-
       child: Container(
         decoration: BoxDecoration(
           color: isDark
@@ -31,7 +38,7 @@ class DrawerContentWidget extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Top close / app name row (optional)
+              // Top title
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -41,17 +48,21 @@ class DrawerContentWidget extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  
                 ],
               ),
               const SizedBox(height: 16),
-            
-              // Profile card
-              ProfileCard(isDark: isDark, theme: theme),
-            
+
+              // Profile card – we’ll pass user data to it
+              ProfileCard(
+                isDark: isDark,
+                theme: theme,
+                userName: userName,
+                userEmail: userEmail,
+                userRole: userRole,
+              ),
+
               const SizedBox(height: 24),
-            
-              // Section label
+
               Text(
                 'General',
                 style: theme.textTheme.labelLarge?.copyWith(
@@ -62,8 +73,7 @@ class DrawerContentWidget extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-            
-              // General menu items (grouped in a card)
+
               DrawerCard(
                 children: [
                   DrawerItem(
@@ -72,6 +82,7 @@ class DrawerContentWidget extends StatelessWidget {
                     onTap: () {
                       // TODO: navigate to profile
                       
+
                     },
                   ),
                   DrawerItem(
@@ -79,14 +90,13 @@ class DrawerContentWidget extends StatelessWidget {
                     label: 'Settings',
                     onTap: () {
                       // TODO: navigate to settings
-                      
                     },
                   ),
                 ],
               ),
-            
+
               const SizedBox(height: 24),
-            
+
               Text(
                 'Health',
                 style: theme.textTheme.labelLarge?.copyWith(
@@ -97,52 +107,44 @@ class DrawerContentWidget extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-            
+
               DrawerCard(
                 children: [
                   DrawerItem(
                     icon: AppIcons.calendar,
                     label: 'Follow-up checks',
                     onTap: () {
-                      // TODO: checks
-                      
+                      // TODO
                     },
                   ),
                   DrawerItem(
                     icon: AppIcons.reports,
                     label: 'Medical records',
                     onTap: () {
-                      // TODO: records
-                      
+                      // TODO
                     },
                   ),
                   DrawerItem(
                     icon: AppIcons.activity,
                     label: 'Vitals & health metrics',
                     onTap: () {
-                      // TODO: vitals
-                      
+                      // TODO
                     },
                   ),
                   DrawerItem(
                     icon: AppIcons.phone,
                     label: 'Contact doctor',
                     onTap: () {
-                      // TODO: telehealth / contact
-                      
+                      // TODO
                     },
                   ),
                 ],
               ),
-            
+
               const Spacer(),
-            
-              // Logout card at bottom, red accent
+
               LogoutCard(
-                onLogout: () {
-                  // TODO: logout
-                  
-                },
+                onLogout: onLogout,
               ),
             ],
           ),

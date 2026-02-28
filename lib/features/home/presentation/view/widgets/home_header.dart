@@ -6,11 +6,13 @@ import 'package:medical_follow_up_app/core/utils/responsive.dart';
 class HomeHeader extends StatelessWidget {
   final VoidCallback? onMenuPressed;
   final VoidCallback? onCareTeamPressed; // NEW
+  final String userName;
+  final String userRole;
 
   const HomeHeader({
     super.key,
     this.onMenuPressed,
-    this.onCareTeamPressed,
+    this.onCareTeamPressed, required this.userName, required this.userRole,
   });
 
   @override
@@ -41,7 +43,7 @@ class HomeHeader extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Welcome, Ahmed',
+                  'Welcome, $userName',
                   style: theme.textTheme.headlineMedium,
                 ),
               ],

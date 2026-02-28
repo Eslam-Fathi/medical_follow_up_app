@@ -6,12 +6,14 @@ class ProfileCard extends StatelessWidget {
   const ProfileCard({
     super.key,
     required this.isDark,
-    required this.theme,
+    required this.theme, required this.userName, required this.userEmail, required this.userRole,
   });
 
   final bool isDark;
   final ThemeData theme;
-
+  final String userName;
+  final String userEmail; 
+  final String userRole;
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -42,7 +44,7 @@ class ProfileCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Ahmed Mohamed',
+                    userName,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),

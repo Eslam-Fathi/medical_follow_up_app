@@ -1,11 +1,13 @@
-import 'package:flutter/material.dart';
 
+
+import 'package:flutter/material.dart';
 import 'package:medical_follow_up_app/core/theme/app_icons.dart';
 import 'package:medical_follow_up_app/core/utils/colors.dart';
 import 'package:medical_follow_up_app/features/chat/presentation/view/chat_screen.dart';
 import 'package:medical_follow_up_app/features/doctors/data/models/doctor_model/doctor_model.dart';
-import 'package:medical_follow_up_app/features/doctors/presentation/view/stat_card.dart';
 import 'package:medical_follow_up_app/features/doctors/presentation/view/widgets/doctor_photo_card.dart';
+import 'package:medical_follow_up_app/features/doctors/presentation/view/widgets/stat_card.dart';
+import 'package:medical_follow_up_app/features/doctors/presentation/view/widgets/weekly_schedule_table.dart';
 
 class CareTeamDetailScreen extends StatelessWidget {
   final DoctorModel doctor;
@@ -354,30 +356,52 @@ class CareTeamDetailScreen extends StatelessWidget {
                       ),
                     ),
 
-                    const SizedBox(height: 24),
+                   
 
                     // Weekly schedule placeholder
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? HealthCareColors.darkSurface
-                            : Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: isDark
-                              ? HealthCareColors.darkBorder
-                              : HealthCareColors.borderLight,
-                        ),
-                      ),
-                      child: Text(
-                        'Weekly schedule will appear here.',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.hintColor,
-                        ),
-                      ),
-                    ),
+                    // Container(
+                    //   width: double.infinity,
+                    //   padding: const EdgeInsets.all(16),
+                    //   decoration: BoxDecoration(
+                    //     color: isDark
+                    //         ? HealthCareColors.darkSurface
+                    //         : Colors.white,
+                    //     borderRadius: BorderRadius.circular(16),
+                    //     border: Border.all(
+                    //       color: isDark
+                    //           ? HealthCareColors.darkBorder
+                    //           : HealthCareColors.borderLight,
+                    //     ),
+                    //   ),
+                    //   child: Text(
+                    //     'Weekly schedule will appear here.',
+                    //     style: theme.textTheme.bodyMedium?.copyWith(
+                    //       color: theme.hintColor,
+                    //     ),
+                    //   ),
+                    // ),
+
+                    
+
+const SizedBox(height: 24),
+
+WeeklyScheduleTable(
+  schedule:  [
+    DoctorDaySchedule(day: 'Monday',    timeRange: '09:00 - 13:00'),
+    DoctorDaySchedule(day: 'Tuesday',   timeRange: '09:00 - 13:00'),
+    DoctorDaySchedule(day: 'Wednesday', timeRange: 'Off'),
+    DoctorDaySchedule(day: 'Thursday',  timeRange: '14:00 - 18:00'),
+    DoctorDaySchedule(day: 'Friday',    timeRange: '10:00 - 15:00'),
+    DoctorDaySchedule(day: 'Saturday',  timeRange: 'Off'),
+    DoctorDaySchedule(day: 'Sunday',    timeRange: 'Off'),
+  ],
+),
+
+const SizedBox(height: 24),
+
+
+const SizedBox(height: 24),
+
 
                     const SizedBox(height: 24),
                   ],
