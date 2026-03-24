@@ -48,7 +48,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final state = ref.read(authNotifierProvider);
     if (!mounted) return;
     if (state.loginResponse != null) {
-      Navigator.of(context).pushReplacementNamed('/home');
+      if (state.loginResponse!.user.role == 'SUPER_ADMIN') {
+        Navigator.of(context).pushReplacementNamed('/admin_dashboard');
+      } else {
+        Navigator.of(context).pushReplacementNamed('/home');
+      }
     }
   } catch (e) {
     if (!mounted) return;
@@ -83,7 +87,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('MedME Login', style: theme.textTheme.headlineSmall),
+                  // Text('MedME Login', style: theme.textTheme.headlineSmall),
                   const SizedBox(height: 24),
 
                   // Email field
@@ -123,7 +127,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 32),
 
                   // Error from AuthState, if any
                   if (state.error != null)
@@ -132,7 +136,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       style: TextStyle(color: theme.colorScheme.error),
                     ),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 64),
 
                   // Login button with loading indicator
                   SizedBox(
@@ -166,11 +170,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   const SizedBox(height: 12),
 
                   // Switch to register
-                  TextButton(
-                    onPressed:
-                        state.isLoading ? null : widget.onCreateAccountTap,
-                    child: const Text("Don't have an account? Create one"),
-                  ),
+                  // TextButton(
+                  //   onPressed:
+                  //       state.isLoading ? null : widget.onCreateAccountTap,
+                  //   child: const Text("Don't have an account? Create one"),
+                  // ),
                 ],
               ),
             ),

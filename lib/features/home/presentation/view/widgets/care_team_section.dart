@@ -3,9 +3,12 @@ import 'package:medical_follow_up_app/core/theme/app_icons.dart';
 import 'package:medical_follow_up_app/core/utils/colors.dart';
 import 'package:medical_follow_up_app/features/doctors/data/models/doctor_model/doctor_model.dart';
 import 'package:medical_follow_up_app/features/doctors/presentation/view/care_team_detail_screen.dart';
+import 'package:medical_follow_up_app/features/profile/data/network/profile_api.dart';
 
 class CareTeamSection extends StatelessWidget {
-  const CareTeamSection({super.key});
+final ProfileResponse profile;
+
+  const CareTeamSection({super.key, required this.profile});
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +41,7 @@ class CareTeamSection extends StatelessWidget {
             ),
             TextButton(
               onPressed: () {
-                // TODO: navigate to full doctors list
+                Navigator.of(context).pushNamed('/doctors_list');
               },
               child: const Text('See all'),
             ),
@@ -53,7 +56,7 @@ class CareTeamSection extends StatelessWidget {
             separatorBuilder: (_, __) => const SizedBox(width: 12),
             itemBuilder: (context, index) {
               final doctor = doctors[index];
-              return _DoctorCard(doctor: doctor);
+              return _DoctorCard(doctor: doctor, profile: profile ,);
             },
           ),
         ),
@@ -63,9 +66,10 @@ class CareTeamSection extends StatelessWidget {
 }
 
 class _DoctorCard extends StatelessWidget {
+  final ProfileResponse profile;
   final Map<String, String> doctor;
 
-  const _DoctorCard({required this.doctor});
+  const _DoctorCard({required this.doctor, required this.profile});
 
   @override
   Widget build(BuildContext context) {
@@ -76,6 +80,7 @@ class _DoctorCard extends StatelessWidget {
         // Create a DoctorModel from the Map data
         final doctorModel = DoctorModel(
           id: doctor['id'] ?? '1',
+          userId: doctor['userId'] ?? '2',
           name: doctor['name'] ?? '',
           specialty: doctor['specialty'] ?? '',
           rating: doctor['rating'] ?? '0',
@@ -89,9 +94,14 @@ class _DoctorCard extends StatelessWidget {
         // Navigate to detail screen
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => CareTeamDetailScreen(doctor: doctorModel),
+            builder: (context) => CareTeamDetailScreen(doctor: doctorModel, profile: profile),
           ),
         );
+        print("##############################################################");
+        print('Tapped on ${doctor['name']}');
+        print("user id: ${profile.user.id}");
+        print("user name: ${profile.user.name}");
+        print("##############################################################");
       },
       child: SizedBox(
         width: 180,

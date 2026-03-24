@@ -33,7 +33,7 @@ class HomeHeader extends StatelessWidget {
               icon:  Icon(AppIcons.menu),
               onPressed: onMenuPressed,
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: 1),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -61,13 +61,15 @@ class HomeHeader extends StatelessWidget {
               icon:  Icon(AppIcons.heart), // or AppIcons.activity / people icon
               tooltip: 'Your care team',
             ),
-            IconButton(
+              isDeskTop
+                ? IconButton(
               onPressed: () {
                 // TODO: notifications
               },
               icon:  Icon(AppIcons.notifications),
-            ),
-            const SizedBox(width: 4),
+            )
+                :  const SizedBox.shrink(),
+            const SizedBox(width: 1),
              CircleAvatar(
               radius: 18,
               backgroundColor: HealthCareColors.primary,

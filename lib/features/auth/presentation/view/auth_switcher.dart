@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 
@@ -38,87 +39,96 @@ class _AuthSwitcherState extends State<AuthSwitcher> {
         ),
         child: Center(
           child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 450),
-            switchInCurve: Curves.easeOutCubic,
-            switchOutCurve: Curves.easeInCubic,
+            duration: const Duration(milliseconds: 550),
+            switchInCurve: Curves.easeInOutCubic,
+            switchOutCurve: Curves.easeInOutCubic,
             transitionBuilder: (child, animation) {
-              final curved = CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeOutCubic,
+              // child.key is ValueKey<bool>(_showLogin)
+              final isLoginSide = (child.key as ValueKey<bool>).value;
+
+              // Flip from left for login, from right for signup
+              final rotateAnim = Tween<double>(
+                begin: isLoginSide ? -0.5 : 0.5, // in "turns" (0.5 = half turn)
+                end: 0.0,
+              ).animate(
+                CurvedAnimation(
+                  parent: animation,
+                  curve: Curves.easeInOutCubic,
+                ),
               );
 
-              return FadeTransition(
-                opacity: curved,
-                child: ScaleTransition(
-                  scale: Tween<double>(begin: 0.97, end: 1.0).animate(curved),
-                  child: AnimatedBuilder(
-                    animation: curved,
-                    builder: (context, _) {
-                      final blur = (1.0 - curved.value) * 6.0;
-                      return ClipRRect(
+              return AnimatedBuilder(
+                animation: rotateAnim,
+                child: child,
+                builder: (context, child) {
+                  final angle = rotateAnim.value * pi;
+
+                  // Hide "back" side when more than 90 degrees
+                  final isUnder = angle.abs() > (pi / 2);
+
+                  return Opacity(
+                    opacity: isUnder ? 0.0 : 1.0,
+                    child: Transform(
+                      alignment: Alignment.center,
+                      transform: Matrix4.identity()
+                        ..setEntry(3, 2, 0.001) // perspective
+                        ..rotateY(angle),
+                      child: ClipRRect(
                         borderRadius: BorderRadius.circular(24),
                         child: BackdropFilter(
                           filter: ImageFilter.blur(
-                            sigmaX: blur,
-                            sigmaY: blur,
+                            sigmaX: 0,
+                            sigmaY: 0,
                           ),
                           child: child,
                         ),
-                      );
-                    },
-                  ),
-                ),
+                      ),
+                    ),
+                  );
+                },
               );
             },
             child: Card(
               key: ValueKey<bool>(_showLogin),
               elevation: 18,
-              shadowColor:
-                  theme.colorScheme.primary.withOpacity(0.25),
+              shadowColor: theme.colorScheme.primary.withOpacity(0.25),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(24),
               ),
-             child: SizedBox(
-  width: 420,
-  child: SingleChildScrollView(
-    // So content can scroll on small screens instead of overflowing
-    child: ConstrainedBox(
-      constraints: const BoxConstraints(
-        minHeight: 0,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // header
-          Text('MedME', style: theme.textTheme.headlineMedium),
-          const SizedBox(height: 4),
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 250),
-            child: Text(
-              _showLogin ? 'Login to continue' : 'Create your account',
-              key: ValueKey<bool>(_showLogin),
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+              child: SizedBox(
+                width: 420,
+                child: SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const SizedBox(height: 24),
+                        Text('MedME', style: theme.textTheme.headlineMedium),
+                        const SizedBox(height: 4),
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 250),
+                          child: Text(
+                            _showLogin
+                                ? 'Login to continue'
+                                : 'Create your account',
+                            key: ValueKey<bool>(_showLogin),
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        _buildToggleTabs(theme),
+                        const SizedBox(height: 20),
+                        _showLogin
+                            ? LoginScreen(onCreateAccountTap: _toggle)
+                            : RegisterScreen(onLoginTap: _toggle),
+                      ],
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          _buildToggleTabs(theme),
-
-          const SizedBox(height: 20),
-
-          // Form content (each screen just returns its form, no Scaffold)
-          _showLogin
-              ? LoginScreen(onCreateAccountTap: _toggle)
-              : RegisterScreen(onLoginTap: _toggle),
-        ],
-      ),
-    ),
-  ),
-),
-
             ),
           ),
         ),
