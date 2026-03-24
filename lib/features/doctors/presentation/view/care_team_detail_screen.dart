@@ -1,21 +1,111 @@
-
-
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:medical_follow_up_app/core/theme/app_icons.dart';
 import 'package:medical_follow_up_app/core/utils/colors.dart';
+import 'package:medical_follow_up_app/features/appointments/presentation/manager/providers/appointments_provider.dart';
 import 'package:medical_follow_up_app/features/chat/presentation/view/chat_screen.dart';
 import 'package:medical_follow_up_app/features/doctors/data/models/doctor_model/doctor_model.dart';
 import 'package:medical_follow_up_app/features/doctors/presentation/view/widgets/doctor_photo_card.dart';
 import 'package:medical_follow_up_app/features/doctors/presentation/view/widgets/stat_card.dart';
 import 'package:medical_follow_up_app/features/doctors/presentation/view/widgets/weekly_schedule_table.dart';
+import 'package:medical_follow_up_app/features/profile/data/network/profile_api.dart';
 
-class CareTeamDetailScreen extends StatelessWidget {
+// import your booking provider + profile model
+// import 'package:medical_follow_up_app/features/appointments/presentation/providers/book_appointment_provider.dart';
+// import 'package:medical_follow_up_app/features/profile/data/models/profile_response.dart';
+
+class CareTeamDetailScreen extends ConsumerStatefulWidget {
   final DoctorModel doctor;
+  final ProfileResponse profile; // <-- coming from Home
 
   const CareTeamDetailScreen({
     super.key,
     required this.doctor,
+    required this.profile,
   });
+
+  @override
+  ConsumerState<CareTeamDetailScreen> createState() =>
+      _CareTeamDetailScreenState();
+}
+
+class _CareTeamDetailScreenState extends ConsumerState<CareTeamDetailScreen> {
+  DateTime? selectedDateTime;
+
+  Future<void> _pickDateTime() async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (date == null) return;
+
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+    if (time == null) return;
+
+    setState(() {
+      selectedDateTime = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        time.hour,
+        time.minute,
+      );
+    });
+  }
+
+  Future<void> _bookAppointment() async {
+    if (selectedDateTime == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select date & time')),
+      );
+      return;
+    }
+
+    // Attempt to extract the patient document ID
+    final patientId =
+        widget.profile.patient?['_id']?.toString() ??
+        widget.profile.patient?['id']?.toString();
+
+    if (patientId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please complete your patient profile first.'),
+        ),
+      );
+      return;
+    }
+
+    final appointment = await ref
+        .read(bookAppointmentProvider.notifier)
+        .book(
+          patientId: patientId,
+          doctorId: widget.doctor.id,
+          dateTime: selectedDateTime!,
+        );
+
+    final state = ref.read(bookAppointmentProvider);
+
+    if (appointment == null && state.error != null && mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(state.error!)));
+    } else if (appointment != null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Appointment booked successfully')),
+      );
+    }
+    print("#########################################################");
+
+    print(widget.profile.user.name);
+    print('Doctor User ID: ${widget.doctor.userId}');
+    print('Doctor Document ID: ${widget.doctor.id}');
+    print("#########################################################");
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,6 +113,8 @@ class CareTeamDetailScreen extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     final size = MediaQuery.of(context).size;
     final isWide = size.width >= 900; // big-screen breakpoint
+
+    final doctor = widget.doctor;
 
     return Scaffold(
       backgroundColor: theme.colorScheme.background,
@@ -42,24 +134,22 @@ class CareTeamDetailScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // Header
-                  Row(
-  children: [
-    if (!isWide) // hide on big/web-like screens
-      IconButton(
-        icon: const Icon(Icons.arrow_back),
-        onPressed: () => Navigator.of(context).pop(),
-      ),
-    const Spacer(),
-    Text(
-      'Doctor Profile',
-      style: theme.textTheme.titleLarge,
-    ),
-    const Spacer(),
-    SizedBox(width: isWide ? 0 : 48), // balance only when back button exists
-  ],
-),
-
-
+                    Row(
+                      children: [
+                        if (!isWide)
+                          IconButton(
+                            icon: const Icon(Icons.arrow_back),
+                            onPressed: () => Navigator.of(context).pop(),
+                          ),
+                        const Spacer(),
+                        Text(
+                          'Doctor Profile',
+                          style: theme.textTheme.titleLarge,
+                        ),
+                        const Spacer(),
+                        SizedBox(width: isWide ? 0 : 48),
+                      ],
+                    ),
                     const SizedBox(height: 16),
 
                     // TOP SECTION
@@ -77,18 +167,14 @@ class CareTeamDetailScreen extends StatelessWidget {
                               reviewCount: doctor.reviewCount,
                             ),
                           ),
-
                           const SizedBox(width: 24),
-                          
 
-                          // RIGHT: stats + buttons under stats
+                          // RIGHT: stats + chat + booking
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                SizedBox(
-                                  height: 50,
-                                ),
+                                const SizedBox(height: 50),
                                 Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceEvenly,
@@ -119,9 +205,7 @@ class CareTeamDetailScreen extends StatelessWidget {
                                     ),
                                   ],
                                 ),
-
                                 const SizedBox(height: 16),
-
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
@@ -150,8 +234,9 @@ class CareTeamDetailScreen extends StatelessWidget {
                                               MaterialPageRoute(
                                                 builder: (context) =>
                                                     ChatScreen(
-                                                  doctorName: doctor.name,
-                                                ),
+                                                      chatPartnerName: doctor.name,
+                                                      otherUserId: doctor.userId,
+                                                    ),
                                               ),
                                             );
                                           } else {
@@ -165,24 +250,26 @@ class CareTeamDetailScreen extends StatelessWidget {
                                                   child: Padding(
                                                     padding:
                                                         const EdgeInsets.only(
-                                                      right: 24,
-                                                      bottom: 24,
-                                                    ),
+                                                          right: 24,
+                                                          bottom: 24,
+                                                        ),
                                                     child: Material(
                                                       elevation: 8,
                                                       borderRadius:
                                                           BorderRadius.circular(
-                                                              16),
+                                                            16,
+                                                          ),
                                                       child: SizedBox(
                                                         width: 380,
                                                         height: 480,
                                                         child: ClipRRect(
                                                           borderRadius:
-                                                              BorderRadius
-                                                                  .circular(16),
+                                                              BorderRadius.circular(
+                                                                16,
+                                                              ),
                                                           child: ChatScreen(
-                                                            doctorName:
-                                                                doctor.name,
+                                                            chatPartnerName: doctor.name,
+                                                            otherUserId: doctor.userId,
                                                           ),
                                                         ),
                                                       ),
@@ -194,10 +281,31 @@ class CareTeamDetailScreen extends StatelessWidget {
                                           }
                                         },
                                         icon: const Icon(
-                                            Icons.message_outlined),
-                                        label:
-                                            const Text('Send Message'),
+                                          Icons.message_outlined,
+                                        ),
+                                        label: const Text('Send Message'),
                                       ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+
+                                // Pick date/time + Book (wide)
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    OutlinedButton(
+                                      onPressed: _pickDateTime,
+                                      child: Text(
+                                        selectedDateTime == null
+                                            ? 'Select date & time'
+                                            : selectedDateTime.toString(),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    ElevatedButton(
+                                      onPressed: _bookAppointment,
+                                      child: const Text('Book Appointment'),
                                     ),
                                   ],
                                 ),
@@ -277,7 +385,8 @@ class CareTeamDetailScreen extends StatelessWidget {
                                       Navigator.of(context).push(
                                         MaterialPageRoute(
                                           builder: (context) => ChatScreen(
-                                            doctorName: doctor.name,
+                                            chatPartnerName: doctor.name,
+                                            otherUserId: doctor.userId,
                                           ),
                                         ),
                                       );
@@ -287,11 +396,9 @@ class CareTeamDetailScreen extends StatelessWidget {
                                         barrierDismissible: true,
                                         builder: (dialogContext) {
                                           return Align(
-                                            alignment:
-                                                Alignment.bottomRight,
+                                            alignment: Alignment.bottomRight,
                                             child: Padding(
-                                              padding:
-                                                  const EdgeInsets.only(
+                                              padding: const EdgeInsets.only(
                                                 right: 24,
                                                 bottom: 24,
                                               ),
@@ -305,9 +412,11 @@ class CareTeamDetailScreen extends StatelessWidget {
                                                   child: ClipRRect(
                                                     borderRadius:
                                                         BorderRadius.circular(
-                                                            16),
+                                                          16,
+                                                        ),
                                                     child: ChatScreen(
-                                                      doctorName: doctor.name,
+                                                      chatPartnerName: doctor.name,
+                                                      otherUserId: doctor.userId,
                                                     ),
                                                   ),
                                                 ),
@@ -320,6 +429,24 @@ class CareTeamDetailScreen extends StatelessWidget {
                                   },
                                   icon: const Icon(Icons.message_outlined),
                                   label: const Text('Send Message'),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              OutlinedButton(
+                                onPressed: _pickDateTime,
+                                child: Text(
+                                  selectedDateTime == null
+                                      ? 'Select date & time'
+                                      : selectedDateTime.toString(),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              SizedBox(
+                                width: size.width * 0.7,
+                                height: 48,
+                                child: ElevatedButton(
+                                  onPressed: _bookAppointment,
+                                  child: const Text('Book Appointment'),
                                 ),
                               ),
                             ],
@@ -356,52 +483,31 @@ class CareTeamDetailScreen extends StatelessWidget {
                       ),
                     ),
 
-                   
+                    const SizedBox(height: 24),
 
-                    // Weekly schedule placeholder
-                    // Container(
-                    //   width: double.infinity,
-                    //   padding: const EdgeInsets.all(16),
-                    //   decoration: BoxDecoration(
-                    //     color: isDark
-                    //         ? HealthCareColors.darkSurface
-                    //         : Colors.white,
-                    //     borderRadius: BorderRadius.circular(16),
-                    //     border: Border.all(
-                    //       color: isDark
-                    //           ? HealthCareColors.darkBorder
-                    //           : HealthCareColors.borderLight,
-                    //     ),
-                    //   ),
-                    //   child: Text(
-                    //     'Weekly schedule will appear here.',
-                    //     style: theme.textTheme.bodyMedium?.copyWith(
-                    //       color: theme.hintColor,
-                    //     ),
-                    //   ),
-                    // ),
-
-                    
-
-const SizedBox(height: 24),
-
-WeeklyScheduleTable(
-  schedule:  [
-    DoctorDaySchedule(day: 'Monday',    timeRange: '09:00 - 13:00'),
-    DoctorDaySchedule(day: 'Tuesday',   timeRange: '09:00 - 13:00'),
-    DoctorDaySchedule(day: 'Wednesday', timeRange: 'Off'),
-    DoctorDaySchedule(day: 'Thursday',  timeRange: '14:00 - 18:00'),
-    DoctorDaySchedule(day: 'Friday',    timeRange: '10:00 - 15:00'),
-    DoctorDaySchedule(day: 'Saturday',  timeRange: 'Off'),
-    DoctorDaySchedule(day: 'Sunday',    timeRange: 'Off'),
-  ],
-),
-
-const SizedBox(height: 24),
-
-
-const SizedBox(height: 24),
-
+                    WeeklyScheduleTable(
+                      schedule: [
+                        DoctorDaySchedule(
+                          day: 'Monday',
+                          timeRange: '09:00 - 13:00',
+                        ),
+                        DoctorDaySchedule(
+                          day: 'Tuesday',
+                          timeRange: '09:00 - 13:00',
+                        ),
+                        DoctorDaySchedule(day: 'Wednesday', timeRange: 'Off'),
+                        DoctorDaySchedule(
+                          day: 'Thursday',
+                          timeRange: '14:00 - 18:00',
+                        ),
+                        DoctorDaySchedule(
+                          day: 'Friday',
+                          timeRange: '10:00 - 15:00',
+                        ),
+                        DoctorDaySchedule(day: 'Saturday', timeRange: 'Off'),
+                        DoctorDaySchedule(day: 'Sunday', timeRange: 'Off'),
+                      ],
+                    ),
 
                     const SizedBox(height: 24),
                   ],

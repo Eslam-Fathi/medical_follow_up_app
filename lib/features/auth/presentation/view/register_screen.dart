@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:medical_follow_up_app/features/auth/presentation/manager/state/auth_notifier.dart';
+import 'package:medical_follow_up_app/core/network/api_providers.dart';
 
 /// RegisterScreen for creating a new user (PATIENT by default).
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -22,6 +23,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _passwordController = TextEditingController();
 
   bool _obscurePassword = true;
+  String _selectedRole = 'PATIENT';
+  Map<String, dynamic> _doctorDetails = {};
 
   @override
   void dispose() {
@@ -31,28 +34,120 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     super.dispose();
   }
 
+  Future<Map<String, dynamic>?> _showDoctorDetailsDialog() async {
+    final licenseController = TextEditingController(text: _doctorDetails['licenseNumber']?.toString() ?? '');
+    final specController = TextEditingController(text: _doctorDetails['specialization']?.toString() ?? '');
+    final expController = TextEditingController(text: _doctorDetails['yearsOfExperience']?.toString() ?? '');
+
+    return showDialog<Map<String, dynamic>>(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Doctor Details'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: specController,
+                decoration: const InputDecoration(labelText: 'Specialization', hintText: 'e.g. Cardiology'),
+                autofocus: true,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: licenseController,
+                decoration: const InputDecoration(labelText: 'License Number', hintText: 'e.g. DOC123456'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: expController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Years of Experience'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(null),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (licenseController.text.trim().isEmpty || specController.text.trim().isEmpty || expController.text.trim().isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('All fields are required')),
+                  );
+                } else {
+                  Navigator.of(context).pop({
+                    'licenseNumber': licenseController.text.trim(),
+                    'specialization': specController.text.trim(),
+                    'yearsOfExperience': int.tryParse(expController.text.trim()) ?? 0,
+                  });
+                }
+              },
+              child: const Text('Save & Continue'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
 Future<void> _onRegisterPressed() async {
   if (!_formKey.currentState!.validate()) return;
+
+  if (_selectedRole == 'DOCTOR') {
+    final details = await _showDoctorDetailsDialog();
+    if (details == null) {
+      return; // Cancelled
+    }
+    setState(() {
+      _doctorDetails = details;
+    });
+  }
 
   final notifier = ref.read(authNotifierProvider.notifier);
   await notifier.register(
     name: _nameController.text.trim(),
     email: _emailController.text.trim(),
     password: _passwordController.text,
-    role: 'PATIENT',
+    role: _selectedRole,
   );
 
   final state = ref.read(authNotifierProvider);
   if (!mounted) return;
 
   if (state.loginResponse != null) {
-    final user = state.loginResponse!.user;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Account created for ${user.name}')),
-    );
-
     
-    Navigator.of(context).pushReplacementNamed('/home');
+    // Submit Doctor Profile Appilcation after user creation if DOCTOR
+    if (_selectedRole == 'DOCTOR') {
+      try {
+        final doctorApi = ref.read(doctorApiProvider);
+        await doctorApi.createDoctorProfile(
+          userId: state.loginResponse!.user.id,
+          specialization: _doctorDetails['specialization'],
+          licenseNumber: _doctorDetails['licenseNumber'],
+          yearsOfExperience: _doctorDetails['yearsOfExperience'],
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Doctor application submitted successfully!')),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to submit doctor profile: $e')),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Account created for ${state.loginResponse!.user.name}')),
+      );
+    }
+
+    if (_selectedRole == 'PATIENT') {
+      Navigator.of(context).pushReplacementNamed('/patient_form');
+    } else {
+      Navigator.of(context).pushReplacementNamed('/home');
+    }
   }
 }
 
@@ -73,7 +168,7 @@ Future<void> _onRegisterPressed() async {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('Create Account', style: theme.textTheme.headlineSmall),
+                  // Text('Create Account', style: theme.textTheme.headlineSmall),
                   const SizedBox(height: 24),
 
                   TextFormField(
@@ -115,6 +210,23 @@ Future<void> _onRegisterPressed() async {
                   ),
                   const SizedBox(height: 16),
 
+                  SizedBox(
+                    width: double.infinity,
+                    child: SegmentedButton<String>(
+                      segments: const [
+                        ButtonSegment(value: 'PATIENT', label: Text('Patient')),
+                        ButtonSegment(value: 'DOCTOR', label: Text('Doctor')),
+                      ],
+                      selected: {_selectedRole},
+                      onSelectionChanged: (Set<String> newSelection) {
+                        setState(() {
+                          _selectedRole = newSelection.first;
+                        });
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
                   if (state.error != null)
                     Text(
                       state.error!,
@@ -137,10 +249,10 @@ Future<void> _onRegisterPressed() async {
 
                   const SizedBox(height: 12),
 
-                  TextButton(
-                    onPressed: state.isLoading ? null : widget.onLoginTap,
-                    child: const Text('Already have an account? Login'),
-                  ),
+                  // TextButton(
+                  //   onPressed: state.isLoading ? null : widget.onLoginTap,
+                  //   child: const Text('Already have an account? Login'),
+                  // ),
                 ],
               ),
             ),

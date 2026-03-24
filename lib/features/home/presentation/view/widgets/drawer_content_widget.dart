@@ -4,7 +4,9 @@ import 'package:medical_follow_up_app/core/utils/colors.dart';
 import 'package:medical_follow_up_app/features/home/presentation/view/widgets/drawer_card.dart';
 import 'package:medical_follow_up_app/features/home/presentation/view/widgets/drawer_item.dart';
 import 'package:medical_follow_up_app/features/home/presentation/view/widgets/logout_card.dart';
+import 'package:medical_follow_up_app/features/home/presentation/view/widgets/mock_record.dart';
 import 'package:medical_follow_up_app/features/home/presentation/view/widgets/profile_card.dart';
+import 'package:medical_follow_up_app/features/medical_record/presentation/view/medical_record_screen.dart';
 class DrawerContentWidget extends StatelessWidget {
   const DrawerContentWidget({
     super.key,
@@ -121,8 +123,16 @@ class DrawerContentWidget extends StatelessWidget {
                     icon: AppIcons.reports,
                     label: 'Medical records',
                     onTap: () {
-                      // TODO
-                    },
+                        Navigator.of(context).pop();
+                        Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const MedicalRecordScreen(
+          patientRecord: kMockPatientRecord,
+        ),
+      ),
+    );
+  },
+
                   ),
                   DrawerItem(
                     icon: AppIcons.activity,

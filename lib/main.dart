@@ -6,6 +6,9 @@ import 'package:medical_follow_up_app/core/utils/scroll_bar_behavior.dart';
 import 'package:medical_follow_up_app/features/auth/presentation/view/auth_switcher.dart';
 import 'package:medical_follow_up_app/features/home/presentation/view/home_screen.dart';
 import 'package:medical_follow_up_app/features/profile/presentation/view/profile_screen.dart';
+import 'package:medical_follow_up_app/features/profile/presentation/view/patient_form_screen.dart';
+import 'package:medical_follow_up_app/features/admin/presentation/view/admin_dashboard_screen.dart';
+import 'package:medical_follow_up_app/features/doctors/presentation/view/doctors_list_screen.dart';
 
 
 void main() {
@@ -29,6 +32,9 @@ class MedME extends StatelessWidget {
         '/auth': (_) => const AuthSwitcher(),
         '/home': (_) => const HomeFollowUpScreen(),
         '/profile': (_) => const ProfileScreen(), 
+        '/patient_form': (_) => const PatientFormScreen(),
+        '/admin_dashboard': (_) => const AdminDashboardScreen(),
+        '/doctors_list': (_) => const DoctorsListScreen(),
       },
     );
   }

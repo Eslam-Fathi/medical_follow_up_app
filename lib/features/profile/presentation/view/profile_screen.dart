@@ -17,14 +17,8 @@ class ProfileScreen extends ConsumerWidget {
     final profileAsync = ref.watch(profileProvider);
 
     return profileAsync.when(
-      loading: () => const Scaffold(
-        
-        body: Center(child: CircularProgressIndicator()),
-      ),
-      error: (err, _) => Scaffold(
-        appBar: AppBar(title: const Text('Profile')),
-        body: Center(child: Text(err.toString())),
-      ),
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (err, _) => Center(child: Text(err.toString())),
       data: (profile) {
         final user = profile.user;
         final patient = profile.patient;
@@ -34,35 +28,22 @@ class ProfileScreen extends ConsumerWidget {
         final isDesktop = Responsive.isDesktop(context);
         final isMobile = Responsive.isMobile(context);
 
-        return Scaffold(
-          appBar: AppBar(
-            automaticallyImplyLeading: false,
-            title: const Text('Profile'),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.edit),
-                onPressed: () {
-                  // TODO: navigate to EditProfileScreen later
-                },
-              ),
-            ],
-          ),
-          body: SafeArea(
-            child: isDesktop
-                ? ProfileDesktopLayout(
-                    user: user,
-                    patient: patient,
-                    doctor: doctor,
-                    isDoctor: isDoctor,
-                  )
-                : ProfileMobileLayout(
-                    user: user,
-                    patient: patient,
-                    doctor: doctor,
-                    isDoctor: isDoctor,
-                    isMobile: isMobile,
-                  ),
-          ),
+        // No Scaffold here, just the profile content
+        return SafeArea(
+          child: isDesktop
+              ? ProfileDesktopLayout(
+                  user: user,
+                  patient: patient,
+                  doctor: doctor,
+                  isDoctor: isDoctor,
+                )
+              : ProfileMobileLayout(
+                  user: user,
+                  patient: patient,
+                  doctor: doctor,
+                  isDoctor: isDoctor,
+                  isMobile: isMobile,
+                ),
         );
       },
     );

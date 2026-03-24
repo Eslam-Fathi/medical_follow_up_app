@@ -76,15 +76,46 @@ class Appointment {
 
   factory Appointment.fromJson(Map<String, dynamic> json) {
     return Appointment(
-      id: json['_id'] as String,
-      patient: AppointmentPatientRef.fromJson(
-        json['patientId'] as Map<String, dynamic>,
-      ),
-      doctor: AppointmentDoctorRef.fromJson(
-        json['doctorId'] as Map<String, dynamic>,
-      ),
-      date: DateTime.parse(json['date'] as String),
-      status: json['status'] as String,
+      id: json['_id']?.toString() ?? '',
+      patient: json['patientId'] is Map 
+          ? AppointmentPatientRef.fromJson(json['patientId'] as Map<String, dynamic>)
+          : AppointmentPatientRef(
+              id: json['patientId']?.toString() ?? '', 
+              user: AppointmentUserRef(id: '', name: 'Pending', email: '')
+            ),
+      doctor: json['doctorId'] is Map
+          ? AppointmentDoctorRef.fromJson(json['doctorId'] as Map<String, dynamic>)
+          : AppointmentDoctorRef(
+              id: json['doctorId']?.toString() ?? '', 
+              user: AppointmentUserRef(id: '', name: 'Pending', email: ''),
+              specialization: ''
+            ),
+      date: json['date'] != null ? DateTime.parse(json['date'] as String) : DateTime.now(),
+      status: json['status']?.toString() ?? 'PENDING',
     );
+  }
+}
+
+
+class CreateAppointmentRequest {
+  final String patientId;
+  final String doctorId;
+  final DateTime date;
+  final String status; // usually "PENDING"
+
+  CreateAppointmentRequest({
+    required this.patientId,
+    required this.doctorId,
+    required this.date,
+    this.status = 'PENDING',
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'patientId': patientId,
+      'doctorId': doctorId,
+      'date': date.toUtc().toIso8601String(),
+      'status': status,
+    };
   }
 }

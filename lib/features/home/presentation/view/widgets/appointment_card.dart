@@ -2,13 +2,16 @@
 import 'package:flutter/material.dart';
 
 import 'package:medical_follow_up_app/features/appointments/data/models/appointment_model.dart';
+import 'package:medical_follow_up_app/features/appointments/presentation/view/doctor_appointment_detail_screen.dart';
 
 class AppointmentCard extends StatelessWidget {
   final Appointment appointment;
+  final bool isDoctorView;
 
   const AppointmentCard({
     super.key,
     required this.appointment,
+    this.isDoctorView = false,
   });
 
   Color _statusColor(BuildContext context) {
@@ -31,23 +34,42 @@ class AppointmentCard extends StatelessWidget {
     final dateStr =
         '${appointment.date.toLocal()}'.split('.').first; // quick format
 
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    final displayName = isDoctorView
+        ? appointment.patient.user.name
+        : 'Dr. ${appointment.doctor.user.name}';
+    final displaySub = isDoctorView
+        ? 'Patient'
+        : appointment.doctor.specialization;
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => AppointmentDetailScreen(
+              appointment: appointment,
+              isDoctorView: isDoctorView,
+            ),
+          ),
+        );
+      },
+      child: Card(
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             // Top row: doctor + status
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
                   child: Text(
-                    appointment.doctor.user.name,
+                    displayName,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -74,7 +96,7 @@ class AppointmentCard extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              appointment.doctor.specialization,
+              displaySub,
               style: theme.textTheme.bodySmall,
             ),
             const SizedBox(height: 8),
@@ -91,6 +113,6 @@ class AppointmentCard extends StatelessWidget {
           ],
         ),
       ),
-    );
+    ));
   }
 }

@@ -6,6 +6,7 @@ import 'package:medical_follow_up_app/core/utils/colors.dart';
 import 'package:medical_follow_up_app/core/utils/responsive.dart';
 
 import 'package:medical_follow_up_app/features/appointments/presentation/manager/providers/appointments_provider.dart';
+
 import 'package:medical_follow_up_app/features/auth/data/models/login/login_response.dart';
 import 'package:medical_follow_up_app/features/auth/presentation/manager/state/auth_notifier.dart';
 import 'package:medical_follow_up_app/features/home/presentation/view/widgets/appointment_card.dart';
@@ -89,30 +90,34 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen> {
                     userName: user.name,
                     userEmail: user.email,
                     userRole: user.role,
-                   onLogout: () async {
-  await ref.read(authNotifierProvider.notifier).logout();
+                    onLogout: () async {
+                      await ref
+                          .read(authNotifierProvider.notifier)
+                          .logout();
 
-  // Clear user-specific providers
-  ref.invalidate(profileProvider);
-  ref.invalidate(appointmentsProvider);
-  // (you can add others later)
+                      // Clear user-specific providers
+                      ref.invalidate(profileProvider);
+                      ref.invalidate(appointmentsProvider);
 
-  if (context.mounted) {
-    Navigator.of(context).pushReplacementNamed('/auth');
-  }
-},
-
+                      if (context.mounted) {
+                        Navigator.of(context)
+                            .pushReplacementNamed('/auth');
+                      }
+                    },
                   ),
                 )
               : null,
           endDrawer: isMobile
               ? SizedBox(
                   width: MediaQuery.of(context).size.width * 0.8,
-                  child: const Drawer(
+                  child: Drawer(
                     child: SafeArea(
                       child: Padding(
-                        padding: EdgeInsets.fromLTRB(16, 16, 16, 16),
-                        child: CareTeamSection(),
+                        padding:
+                            const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                        child: CareTeamSection(
+                          profile: profile, // <-- pass here (mobile)
+                        ),
                       ),
                     ),
                   ),
@@ -120,7 +125,7 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen> {
               : null,
           body: SafeArea(
             child: isDesktop
-                ? _buildDesktopLayout(context, user, patient, doctor)
+                ? _buildDesktopLayout(context, user, patient, doctor, profile)
                 : _buildMobileLayout(context, user, patient, doctor),
           ),
           bottomNavigationBar: _buildBottomNavigationBar(context),
@@ -137,12 +142,13 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen> {
   ) {
     if (_selectedBottomIndex == 1) {
       // Checks tab
-      return _buildChecksTab();
+      return _buildChecksTab(user);
     }
-      // Profile tab
-  if (_selectedBottomIndex == 3) {
-    return const ProfileScreen();
-  }
+
+    // Profile tab
+    if (_selectedBottomIndex == 3) {
+      return const ProfileScreen();
+    }
 
     // Home tab
     return SingleChildScrollView(
@@ -181,12 +187,13 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen> {
     UserDto user,
     Map<String, dynamic>? patient,
     Map<String, dynamic>? doctor,
+    dynamic profile, // add profile param
   ) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
     final bool isChecksTab = _selectedBottomIndex == 1;
-final bool isProfileTab = _selectedBottomIndex == 3;
+    final bool isProfileTab = _selectedBottomIndex == 3;
 
     return Row(
       children: [
@@ -201,19 +208,19 @@ final bool isProfileTab = _selectedBottomIndex == 3;
               userName: user.name,
               userEmail: user.email,
               userRole: user.role,
-            onLogout: () async {
-  await ref.read(authNotifierProvider.notifier).logout();
+              onLogout: () async {
+                await ref
+                    .read(authNotifierProvider.notifier)
+                    .logout();
 
-  // Clear user-specific providers
-  ref.invalidate(profileProvider);
-  ref.invalidate(appointmentsProvider);
-  // (you can add others later)
+                ref.invalidate(profileProvider);
+                ref.invalidate(appointmentsProvider);
 
-  if (context.mounted) {
-    Navigator.of(context).pushReplacementNamed('/auth');
-  }
-},
-
+                if (context.mounted) {
+                  Navigator.of(context)
+                      .pushReplacementNamed('/auth');
+                }
+              },
             ),
           ),
         ),
@@ -222,38 +229,40 @@ final bool isProfileTab = _selectedBottomIndex == 3;
         Expanded(
           flex: 7,
           child: isChecksTab
-    ? _buildChecksTab()
-    : isProfileTab
-        ? const ProfileScreen()
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      HomeHeader(
-                        userName: user.name,
-                        userRole: user.role,
-                        onMenuPressed: null,
-                        onCareTeamPressed: null,
+              ? _buildChecksTab(user)
+              : isProfileTab
+                  ? const ProfileScreen()
+                  : SingleChildScrollView(
+                      padding:
+                          const EdgeInsets.fromLTRB(20, 24, 20, 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          HomeHeader(
+                            userName: user.name,
+                            userRole: user.role,
+                            onMenuPressed: null,
+                            onCareTeamPressed: null,
+                          ),
+                          const SizedBox(height: 24),
+                          const SearchAndFilterRow(),
+                          const SizedBox(height: 16),
+                          FilterChipsRow(
+                            filters: _filters,
+                            selectedIndex: _selectedFilterIndex,
+                            onFilterSelected: (index) {
+                              setState(
+                                  () => _selectedFilterIndex = index);
+                            },
+                          ),
+                          const SizedBox(height: 24),
+                          const NextFollowUpCard(),
+                          const SizedBox(height: 24),
+                          const UpcomingChecksSection(),
+                          const SizedBox(height: 24),
+                        ],
                       ),
-                      const SizedBox(height: 24),
-                      const SearchAndFilterRow(),
-                      const SizedBox(height: 16),
-                      FilterChipsRow(
-                        filters: _filters,
-                        selectedIndex: _selectedFilterIndex,
-                        onFilterSelected: (index) {
-                          setState(() => _selectedFilterIndex = index);
-                        },
-                      ),
-                      const SizedBox(height: 24),
-                      const NextFollowUpCard(),
-                      const SizedBox(height: 24),
-                      const UpcomingChecksSection(),
-                      const SizedBox(height: 24),
-                    ],
-                  ),
-                ),
+                    ),
         ),
 
         // RIGHT: care team
@@ -261,10 +270,13 @@ final bool isProfileTab = _selectedBottomIndex == 3;
           flex: 3,
           child: Container(
             color: isDark ? HealthCareColors.darkSurface : Colors.white,
-            child: const SafeArea(
+            child: SafeArea(
               child: Padding(
-                padding: EdgeInsets.fromLTRB(16, 16, 16, 16),
-                child: CareTeamSection(),
+                padding:
+                    const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                child: CareTeamSection(
+                  profile: profile, // <-- pass here (desktop)
+                ),
               ),
             ),
           ),
@@ -273,27 +285,67 @@ final bool isProfileTab = _selectedBottomIndex == 3;
     );
   }
 
-  Widget _buildChecksTab() {
+  Widget _buildChecksTab(UserDto user) {
     final asyncAppointments = ref.watch(appointmentsProvider);
+    final isDoctor = user.role == 'DOCTOR';
 
-    return asyncAppointments.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (err, _) => Center(child: Text(err.toString())),
-      data: (appointments) {
-        if (appointments.isEmpty) {
-          return const Center(child: Text('No appointments yet'));
-        }
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Appointments'),
+        automaticallyImplyLeading: false, // Don't show back button if nested
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              ref.invalidate(appointmentsProvider);
+            },
+            tooltip: 'Refresh Appointments',
+          ),
+        ],
+      ),
+      floatingActionButton: isDoctor 
+          ? null 
+          : FloatingActionButton.extended(
+              onPressed: () {
+                Navigator.of(context).pushNamed('/doctors_list');
+              },
+              icon: const Icon(Icons.search),
+              label: const Text('Find Doctor'),
+            ),
+      body: asyncAppointments.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, _) => Center(child: Text(err.toString())),
+        data: (appointments) {
+          if (appointments.isEmpty) {
+            return RefreshIndicator(
+              onRefresh: () async => ref.invalidate(appointmentsProvider),
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: const [
+                  SizedBox(height: 100),
+                  Center(child: Text('No appointments yet')),
+                ],
+              ),
+            );
+          }
 
-        return ListView.separated(
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
-          itemCount: appointments.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 12),
-          itemBuilder: (context, index) {
-            final a = appointments[index];
-            return AppointmentCard(appointment: a);
-          },
-        );
-      },
+          return RefreshIndicator(
+            onRefresh: () async => ref.invalidate(appointmentsProvider),
+            child: ListView.separated(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+              itemCount: appointments.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                final appointment = appointments[index];
+                return AppointmentCard(
+                  appointment: appointment,
+                  isDoctorView: isDoctor,
+                );
+              },
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -302,9 +354,8 @@ final bool isProfileTab = _selectedBottomIndex == 3;
       currentIndex: _selectedBottomIndex,
       onTap: (index) {
         setState(() => _selectedBottomIndex = index);
-        // TODO: navigate per tab if needed
       },
-      items:  [
+      items: [
         BottomNavigationBarItem(
           icon: Icon(AppIcons.home),
           activeIcon: Icon(AppIcons.homeFilled),
