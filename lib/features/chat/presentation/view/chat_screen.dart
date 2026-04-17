@@ -4,6 +4,7 @@ import 'package:medical_follow_up_app/features/chat/data/api/chat_api.dart';
 import 'package:medical_follow_up_app/features/chat/data/models/chat_message_model/chat_message.dart';
 import 'package:medical_follow_up_app/features/chat/presentation/view/widgets/message_composer_widget.dart';
 import 'package:medical_follow_up_app/features/profile/presentation/manager/profile.provider.dart';
+import 'package:medical_follow_up_app/core/utils/responsive_wrapper.dart';
 
 import 'widgets/chat_bubble_widget.dart';
 
@@ -134,7 +135,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       ),
       body: _isLoading 
         ? const Center(child: CircularProgressIndicator())
-        : Column(
+        : Center(
+            child: ResponsiveWrapper(
+              child: Column(
         children: [
           // Messages List
           Expanded(
@@ -166,6 +169,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ),
         ],
       ),
+            ),
+          ),
     );
   }
 }

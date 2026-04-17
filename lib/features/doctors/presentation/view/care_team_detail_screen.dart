@@ -9,6 +9,7 @@ import 'package:medical_follow_up_app/features/doctors/presentation/view/widgets
 import 'package:medical_follow_up_app/features/doctors/presentation/view/widgets/stat_card.dart';
 import 'package:medical_follow_up_app/features/doctors/presentation/view/widgets/weekly_schedule_table.dart';
 import 'package:medical_follow_up_app/features/profile/data/network/profile_api.dart';
+import 'package:medical_follow_up_app/core/utils/responsive_wrapper.dart';
 
 // import your booking provider + profile model
 // import 'package:medical_follow_up_app/features/appointments/presentation/providers/book_appointment_provider.dart';
@@ -120,10 +121,9 @@ class _CareTeamDetailScreenState extends ConsumerState<CareTeamDetailScreen> {
       backgroundColor: theme.colorScheme.background,
       body: SafeArea(
         child: Center(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxWidth: isWide ? 1100 : double.infinity,
-            ),
+          child: ResponsiveWrapper(
+            maxWidth: isWide ? 1100 : 800,
+            backgroundColor: Colors.transparent,
             child: SingleChildScrollView(
               child: Padding(
                 padding: EdgeInsets.symmetric(

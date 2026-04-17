@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:medical_follow_up_app/features/auth/presentation/manager/state/auth_notifier.dart';
 import 'package:medical_follow_up_app/core/network/api_providers.dart';
+import 'package:medical_follow_up_app/core/utils/responsive_wrapper.dart';
 
 /// RegisterScreen for creating a new user (PATIENT by default).
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -157,11 +158,10 @@ Future<void> _onRegisterPressed() async {
     final theme = Theme.of(context);
     final state = ref.watch(authNotifierProvider);
 
-    return 
-       Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420),
-          child: Padding(
+    return ResponsiveWrapper(
+      maxWidth: 420,
+      backgroundColor: Colors.transparent,
+      child: Padding(
             padding: const EdgeInsets.all(24),
             child: Form(
               key: _formKey,
@@ -257,8 +257,6 @@ Future<void> _onRegisterPressed() async {
               ),
             ),
           ),
-        ),
-      )
-    ;
+       );
   }
 }

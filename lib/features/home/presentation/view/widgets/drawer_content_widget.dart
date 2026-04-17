@@ -7,7 +7,10 @@ import 'package:medical_follow_up_app/features/home/presentation/view/widgets/lo
 import 'package:medical_follow_up_app/features/home/presentation/view/widgets/mock_record.dart';
 import 'package:medical_follow_up_app/features/home/presentation/view/widgets/profile_card.dart';
 import 'package:medical_follow_up_app/features/medical_record/presentation/view/medical_record_screen.dart';
-class DrawerContentWidget extends StatelessWidget {
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:medical_follow_up_app/core/theme/theme_provider.dart';
+
+class DrawerContentWidget extends ConsumerWidget {
   const DrawerContentWidget({
     super.key,
     required this.theme,
@@ -27,7 +30,7 @@ class DrawerContentWidget extends StatelessWidget {
   final VoidCallback onLogout;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return SafeArea(
       child: Container(
         decoration: BoxDecoration(
@@ -92,6 +95,22 @@ class DrawerContentWidget extends StatelessWidget {
                     label: 'Settings',
                     onTap: () {
                       // TODO: navigate to settings
+                    },
+                  ),
+                  DrawerItem(
+                    icon: isDark ? Icons.dark_mode : Icons.light_mode,
+                    label: 'Dark Mode',
+                    trailing: Switch.adaptive(
+                      value: isDark,
+                      activeColor: HealthCareColors.primary,
+                      onChanged: (val) {
+                        ref.read(themeModeProvider.notifier).state =
+                            val ? ThemeMode.dark : ThemeMode.light;
+                      },
+                    ),
+                    onTap: () {
+                      ref.read(themeModeProvider.notifier).state =
+                          isDark ? ThemeMode.light : ThemeMode.dark;
                     },
                   ),
                 ],

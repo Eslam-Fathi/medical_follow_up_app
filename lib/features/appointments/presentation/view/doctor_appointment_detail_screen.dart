@@ -4,6 +4,7 @@ import 'package:medical_follow_up_app/features/appointments/data/models/appointm
 import 'package:medical_follow_up_app/features/appointments/presentation/manager/providers/appointments_provider.dart';
 import 'package:medical_follow_up_app/features/chat/presentation/view/chat_screen.dart';
 import 'package:medical_follow_up_app/features/medical_record/presentation/view/medical_record_form_screen.dart';
+import 'package:medical_follow_up_app/core/utils/responsive_wrapper.dart';
 
 class AppointmentDetailScreen extends ConsumerStatefulWidget {
   final Appointment appointment;
@@ -83,9 +84,11 @@ class _AppointmentDetailScreenState extends ConsumerState<AppointmentDetailScree
       ),
       body: _isLoading 
         ? const Center(child: CircularProgressIndicator())
-        : ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
+        : Center(
+            child: ResponsiveWrapper(
+              child: ListView(
+                padding: const EdgeInsets.all(20),
+                children: [
           // Person Data (Patient/Doctor)
           Card(
             elevation: 2,
@@ -230,6 +233,8 @@ class _AppointmentDetailScreenState extends ConsumerState<AppointmentDetailScree
           )
         ],
       ),
+            ),
+          ),
     );
   }
 }

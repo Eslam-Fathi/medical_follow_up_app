@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:medical_follow_up_app/core/network/api_client.dart';
 import 'package:medical_follow_up_app/features/appointments/data/models/appointment_model.dart';
 import 'package:medical_follow_up_app/features/appointments/data/network/appointment_api.dart';
+import 'package:medical_follow_up_app/features/profile/presentation/manager/profile.provider.dart';
+import 'package:medical_follow_up_app/features/auth/presentation/manager/state/auth_notifier.dart';
 
 
 final appointmentsApiProvider = Provider<AppointmentsApi>((ref) {
@@ -12,8 +14,67 @@ final appointmentsApiProvider = Provider<AppointmentsApi>((ref) {
 
 final appointmentsProvider =
     FutureProvider<List<Appointment>>((ref) async {
+  // Watch auth state to ensure this provider re-runs on logout/login
+  ref.watch(authNotifierProvider);
+
   final api = ref.watch(appointmentsApiProvider);
   return api.getAppointments();
+});
+
+final doctorAppointmentsProvider =
+    FutureProvider<List<Appointment>>((ref) async {
+  // Watch auth state to ensure this provider re-runs on logout/login
+  ref.watch(authNotifierProvider);
+  
+  final appointments = await ref.watch(appointmentsProvider.future);
+  final profileAsync = await ref.watch(profileProvider.future);
+  
+  final doctorUserId = profileAsync.user.id;
+
+  // Filter for appointments where the doctor is the current user
+  return appointments.where((app) => app.doctor.user.id == doctorUserId).toList();
+});
+
+final todayRemindersProvider =
+    FutureProvider<List<Appointment>>((ref) async {
+  final api = ref.watch(appointmentsApiProvider);
+  return api.getTodayReminders();
+});
+
+final nextAppointmentProvider = FutureProvider<Appointment?>((ref) async {
+  final appointments = await ref.watch(appointmentsProvider.future);
+  if (appointments.isEmpty) return null;
+
+  final now = DateTime.now();
+  // Filter for future appointments that aren't completed/cancelled
+  final upcoming = appointments.where((app) {
+    return app.date.isAfter(now) && 
+           (app.status.toUpperCase() == 'PENDING' || app.status.toUpperCase() == 'CONFIRMED');
+  }).toList();
+
+  if (upcoming.isEmpty) return null;
+  
+  // Sort by date ascending to get the closest one
+  upcoming.sort((a, b) => a.date.compareTo(b.date));
+  return upcoming.first;
+});
+
+final upcomingRemindersProvider =
+    FutureProvider<List<Appointment>>((ref) async {
+  final appointments = await ref.watch(appointmentsProvider.future);
+  if (appointments.isEmpty) return [];
+
+  final now = DateTime.now();
+  final nextWeek = now.add(const Duration(days: 7));
+  
+  // Filter for future appointments within the next 7 days that aren't completed/cancelled
+  final upcoming = appointments.where((app) {
+    return app.date.isAfter(now) && 
+           app.date.isBefore(nextWeek) &&
+           (app.status.toUpperCase() == 'PENDING' || app.status.toUpperCase() == 'CONFIRMED');
+  }).toList();
+
+  return upcoming;
 });
 
 
@@ -33,8 +94,9 @@ class BookAppointmentState {
 
 class BookAppointmentNotifier extends StateNotifier<BookAppointmentState> {
   final AppointmentsApi _api;
+  final Ref _ref;
 
-  BookAppointmentNotifier(this._api) : super(const BookAppointmentState());
+  BookAppointmentNotifier(this._api, this._ref) : super(const BookAppointmentState());
 
   Future<Appointment?> book({
     required String patientId,
@@ -50,9 +112,9 @@ class BookAppointmentNotifier extends StateNotifier<BookAppointmentState> {
       );
       final appointment = await _api.createAppointment(body);
 
-      // optionally refresh list
-      // ignore if you are using cached appointmentsProvider
-      // ref.invalidate(appointmentsProvider); (needs Ref)
+      // Refresh appointments list so the UI updates immediately
+      _ref.invalidate(appointmentsProvider);
+      _ref.invalidate(todayRemindersProvider);
 
       state = state.copyWith(isLoading: false);
       return appointment;
@@ -67,5 +129,5 @@ class BookAppointmentNotifier extends StateNotifier<BookAppointmentState> {
 final bookAppointmentProvider =
     StateNotifierProvider<BookAppointmentNotifier, BookAppointmentState>((ref) {
   final api = ref.watch(appointmentsApiProvider);
-  return BookAppointmentNotifier(api);
+  return BookAppointmentNotifier(api, ref);
 });

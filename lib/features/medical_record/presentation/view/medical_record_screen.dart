@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:medical_follow_up_app/core/utils/responsive.dart';
+import 'package:medical_follow_up_app/core/utils/responsive_wrapper.dart';
 
 class MedicalRecordScreen extends StatelessWidget {
   final Map<String, dynamic> patientRecord;
@@ -20,10 +21,9 @@ class MedicalRecordScreen extends StatelessWidget {
         title: const Text('Medical record'),
       ),
       body: Center(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth: isDesktop ? 1100 : 700,
-          ),
+        child: ResponsiveWrapper(
+          maxWidth: isDesktop ? 1100 : 700,
+          backgroundColor: Colors.transparent,
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
             child: Column(

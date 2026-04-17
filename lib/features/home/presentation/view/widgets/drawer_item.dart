@@ -5,11 +5,13 @@ class DrawerItem extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
+  final Widget? trailing;
 
   const DrawerItem({super.key, 
     required this.icon,
     required this.label,
     required this.onTap,
+    this.trailing,
   });
 
   @override
@@ -35,7 +37,7 @@ class DrawerItem extends StatelessWidget {
                 style: theme.textTheme.bodyMedium,
               ),
             ),
-            const Icon(
+            trailing ?? const Icon(
               Icons.chevron_right,
               size: 18,
               color: Colors.grey,

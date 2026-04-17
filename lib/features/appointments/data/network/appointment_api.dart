@@ -22,6 +22,37 @@ class AppointmentsApi {
     }
   }
 
+  Future<List<Appointment>> getTodayReminders() async {
+    try {
+      final res = await _client.dio.get('/api/appointments/today-reminders');
+      final rawData = res.data;
+      
+      List<dynamic> targetList;
+      if (rawData is List) {
+        targetList = rawData;
+      } else if (rawData is Map) {
+        // Fallback for wrapped responses
+        if (rawData.containsKey('data') && rawData['data'] is List) {
+          targetList = rawData['data'] as List<dynamic>;
+        } else if (rawData.containsKey('reminders') && rawData['reminders'] is List) {
+          targetList = rawData['reminders'] as List<dynamic>;
+        } else {
+          targetList = [];
+        }
+      } else {
+        targetList = [];
+      }
+
+      return targetList
+          .map((e) => Appointment.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw mapDioError(e, fallback: 'Failed to load today reminders');
+    } catch (e) {
+      throw Exception('Data Parse Error: $e');
+    }
+  }
+
   //! implemented and need refactor
   //TODO: create a separate request model for creating appointment
 

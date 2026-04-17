@@ -1,32 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:medical_follow_up_app/core/theme/app_icons.dart';
 import 'package:medical_follow_up_app/core/utils/colors.dart';
+import 'package:medical_follow_up_app/features/appointments/presentation/manager/providers/appointments_provider.dart';
+import 'package:medical_follow_up_app/features/appointments/data/models/appointment_model.dart';
 
-class UpcomingChecksSection extends StatelessWidget {
-  const UpcomingChecksSection({super.key});
+class UpcomingChecksSection extends ConsumerWidget {
+  final VoidCallback onSeeAll;
+
+  const UpcomingChecksSection({super.key, required this.onSeeAll});
+
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    // Reset to start of day for accurate day-difference calculation
+    final dateDay = DateTime(date.year, date.month, date.day);
+    final nowDay = DateTime(now.year, now.month, now.day);
+    final difference = dateDay.difference(nowDay).inDays;
+    
+    final h = date.hour;
+    final m = date.minute.toString().padLeft(2, '0');
+    final period = h >= 12 ? 'PM' : 'AM';
+    final hr12 = h == 0 ? 12 : (h > 12 ? h - 12 : h);
+    final timeStr = '$hr12:$m $period';
+
+    if (difference == 0) return 'Today • $timeStr';
+    if (difference == 1) return 'Tomorrow • $timeStr';
+    if (difference == 2) return 'In 2 days • $timeStr';
+    if (difference == 3) return 'In 3 days • $timeStr';
+    
+    final months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return '${date.day} ${months[date.month - 1]} • $timeStr';
+  }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-
-    // Could be injected from ViewModel later
-    final items = [
-      {
-        'title': 'Blood pressure check',
-        'subtitle': 'Tomorrow • 10:00 AM',
-        'status': 'Upcoming',
-      },
-      {
-        'title': 'Blood test (cholesterol)',
-        'subtitle': 'Mon, 23 Dec • 08:30 AM',
-        'status': 'Upcoming',
-      },
-      {
-        'title': 'ECG follow-up',
-        'subtitle': 'Completed • Last week',
-        'status': 'Completed',
-      },
-    ];
+    final appointmentsAsync = ref.watch(appointmentsProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -40,62 +49,108 @@ class UpcomingChecksSection extends StatelessWidget {
               style: theme.textTheme.titleLarge,
             ),
             TextButton(
-              onPressed: () {
-                // TODO: open full list
-              },
+              onPressed: onSeeAll,
               child: const Text('See all'),
             ),
           ],
         ),
         const SizedBox(height: 8),
-        Column(
-          children: items.map((item) {
-            final status = item['status'] as String;
-            final isCompleted = status == 'Completed';
 
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Card(
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 10,
-                  ),
-                  leading: CircleAvatar(
-                    radius: 20,
-                    backgroundColor: Theme.of(context)
-                        .colorScheme
-                        .primary
-                        .withOpacity(0.1),
-                    child: Icon(
-                      isCompleted ? AppIcons.checkCircle : AppIcons.clock,
-                      color: Theme.of(context).colorScheme.primary,
-                      size: 20,
-                    ),
-                  ),
-                  title: Text(
-                    item['title'] as String,
-                    style: theme.textTheme.bodyLarge,
-                  ),
-                  subtitle: Text(
-                    item['subtitle'] as String,
-                    style: theme.textTheme.bodySmall,
-                  ),
-                  trailing: _StatusPill(
-                    status: status,
-                    completed: isCompleted,
+        appointmentsAsync.when(
+          loading: () => const Center(
+            child: Padding(
+              padding: EdgeInsets.all(24.0),
+              child: CircularProgressIndicator(),
+            ),
+          ),
+          error: (err, _) => Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                'Could not load upcoming checks',
+                style: theme.textTheme.bodyMedium?.copyWith(color: Colors.red),
+              ),
+            ),
+          ),
+          data: (allAppointments) {
+            final now = DateTime.now();
+            final upperBoundary = now.add(const Duration(days: 3));
+
+            final upcoming = allAppointments.where((app) {
+              return app.date.isAfter(now) && app.date.isBefore(upperBoundary);
+            }).toList();
+
+            upcoming.sort((a, b) => a.date.compareTo(b.date));
+
+            if (upcoming.isEmpty) {
+              return Card(
+                color: theme.brightness == Brightness.dark
+                    ? HealthCareColors.darkCardBackground
+                    : HealthCareColors.primaryLighter.withOpacity(0.35),
+                child: const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Center(
+                    child: Text('No upcoming checks in the next 3 days.'),
                   ),
                 ),
-              ),
+              );
+            }
+
+            return Column(
+              children: upcoming.map((app) {
+                final isCompleted = app.status.toUpperCase() == 'COMPLETED';
+                
+                // Fallback title since "checkup name" isn't strictly in the appointment model
+                final specialization = app.doctor.specialization.isNotEmpty 
+                    ? app.doctor.specialization 
+                    : 'General checkup';
+                final title = 'Follow-up • $specialization';
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Card(
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
+                      leading: CircleAvatar(
+                        radius: 20,
+                        backgroundColor: Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withOpacity(0.1),
+                        child: Icon(
+                          isCompleted ? AppIcons.checkCircle : AppIcons.clock,
+                          color: Theme.of(context).colorScheme.primary,
+                          size: 20,
+                        ),
+                      ),
+                      title: Text(
+                        title,
+                        style: theme.textTheme.bodyLarge,
+                      ),
+                      subtitle: Text(
+                        _formatDate(app.date),
+                        style: theme.textTheme.bodySmall,
+                      ),
+                      trailing: _StatusPill(
+                        status: app.status.toUpperCase(),
+                        completed: isCompleted,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
             );
-          }).toList(),
+          },
         ),
       ],
     );
   }
 }
 
-// Internal widget for the pill, still reusable
+// Internal widget for the pill
 class _StatusPill extends StatelessWidget {
   final String status;
   final bool completed;

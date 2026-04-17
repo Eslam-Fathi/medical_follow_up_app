@@ -4,6 +4,8 @@ import 'package:medical_follow_up_app/core/network/api_providers.dart';
 import 'package:medical_follow_up_app/features/doctors/data/models/doctor_model/doctor_model.dart';
 import 'package:medical_follow_up_app/features/doctors/presentation/view/care_team_detail_screen.dart';
 import 'package:medical_follow_up_app/features/profile/presentation/manager/profile.provider.dart';
+import 'package:medical_follow_up_app/features/doctors/presentation/manager/care_team_provider.dart';
+import 'package:medical_follow_up_app/core/utils/responsive_wrapper.dart';
 
 class DoctorsListScreen extends ConsumerStatefulWidget {
   const DoctorsListScreen({super.key});
@@ -109,66 +111,83 @@ class _DoctorsListScreenState extends ConsumerState<DoctorsListScreen> {
           ? const Center(child: CircularProgressIndicator())
           : _filteredDoctors.isEmpty
           ? const Center(child: Text('No doctors found.'))
-          : RefreshIndicator(
-              onRefresh: _fetchDoctors,
-              child: ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: _filteredDoctors.length,
-                itemBuilder: (context, index) {
-                  final doc = _filteredDoctors[index];
-                  final name = doc.name;
-                  final spec = doc.specialty;
-                  final exp = doc.yearsExperience;
+          : ResponsiveWrapper(
+              child: RefreshIndicator(
+                onRefresh: _fetchDoctors,
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: _filteredDoctors.length,
+                  itemBuilder: (context, index) {
+                    final doc = _filteredDoctors[index];
+                    final name = doc.name;
+                    final spec = doc.specialty;
+                    final exp = doc.yearsExperience;
 
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    elevation: 2,
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.all(16),
-                      leading: CircleAvatar(
-                        radius: 28,
-                        backgroundColor: Theme.of(
-                          context,
-                        ).colorScheme.primaryContainer,
-                        child: const Icon(Icons.person, size: 32),
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                      title: Text(
-                        'Dr. $name',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                      elevation: 2,
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.all(16),
+                        leading: CircleAvatar(
+                          radius: 28,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primaryContainer,
+                          child: const Icon(Icons.person, size: 32),
                         ),
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 4),
-                          Text(
-                            spec,
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.primary,
-                              fontWeight: FontWeight.w600,
+                        title: Text(
+                          'Dr. $name',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 4),
+                            Text(
+                              spec,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text('$exp Years Experience'),
-                        ],
-                      ),
-                      trailing: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
+                            const SizedBox(height: 4),
+                            Text('$exp Years Experience'),
+                          ],
                         ),
-                        onPressed: () => _openDoctorProfile(context, doc),
-                        child: const Text('View Profile'),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.person_add),
+                              tooltip: 'Add to Care Team',
+                              onPressed: () {
+                                ref.read(careTeamProvider.notifier).addDoctor(doc);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Added Dr. ${doc.name} to Care Team')),
+                                );
+                              },
+                            ),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                              ),
+                              onPressed: () => _openDoctorProfile(context, doc),
+                              child: const Text('View'),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
             ),
     );

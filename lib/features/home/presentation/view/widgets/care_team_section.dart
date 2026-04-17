@@ -2,31 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:medical_follow_up_app/core/theme/app_icons.dart';
 import 'package:medical_follow_up_app/core/utils/colors.dart';
 import 'package:medical_follow_up_app/features/doctors/data/models/doctor_model/doctor_model.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:medical_follow_up_app/features/doctors/presentation/manager/care_team_provider.dart';
 import 'package:medical_follow_up_app/features/doctors/presentation/view/care_team_detail_screen.dart';
+import 'package:medical_follow_up_app/features/doctors/presentation/view/my_care_team_screen.dart';
 import 'package:medical_follow_up_app/features/profile/data/network/profile_api.dart';
 
-class CareTeamSection extends StatelessWidget {
+class CareTeamSection extends ConsumerWidget {
 final ProfileResponse profile;
 
   const CareTeamSection({super.key, required this.profile});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
-    // You can later inject this from a ViewModel / repository
-    final doctors = [
-      {
-        'name': 'Dr. Ahmed Hassan',
-        'specialty': 'Cardiologist',
-        'rating': '4.9',
-      },
-      {
-        'name': 'Dr. Sara Ali',
-        'specialty': 'Endocrinologist',
-        'rating': '4.8',
-      },
-    ];
+    // Read doctors from the shared_preferences provider
+    final doctors = ref.watch(careTeamProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -41,7 +33,9 @@ final ProfileResponse profile;
             ),
             TextButton(
               onPressed: () {
-                Navigator.of(context).pushNamed('/doctors_list');
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => const MyCareTeamScreen()
+                ));
               },
               child: const Text('See all'),
             ),
@@ -49,59 +43,42 @@ final ProfileResponse profile;
         ),
         const SizedBox(height: 8),
         SizedBox(
-          height: 150,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: doctors.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 12),
-            itemBuilder: (context, index) {
-              final doctor = doctors[index];
-              return _DoctorCard(doctor: doctor, profile: profile ,);
-            },
-          ),
+          height: 170, // Increased height to prevent vertical overflow
+          child: doctors.isEmpty 
+              ? const Center(child: Text("No doctors added to care team yet.\nPlease add them from the doctor list.", textAlign: TextAlign.center))
+              : ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: doctors.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 12),
+                  itemBuilder: (context, index) {
+                    final doctor = doctors[index];
+                    return _DoctorCard(doctor: doctor, profile: profile);
+                  },
+                ),
         ),
       ],
     );
   }
 }
 
-class _DoctorCard extends StatelessWidget {
+class _DoctorCard extends ConsumerWidget {
   final ProfileResponse profile;
-  final Map<String, String> doctor;
+  final DoctorModel doctor;
 
   const _DoctorCard({required this.doctor, required this.profile});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
     return GestureDetector(
       onTap: () {
-        // Create a DoctorModel from the Map data
-        final doctorModel = DoctorModel(
-          id: doctor['id'] ?? '1',
-          userId: doctor['userId'] ?? '2',
-          name: doctor['name'] ?? '',
-          specialty: doctor['specialty'] ?? '',
-          rating: doctor['rating'] ?? '0',
-          reviewCount: doctor['reviewCount'] ?? '0',
-          patientsCount: doctor['patientsCount'] ?? '0+',
-          yearsExperience: doctor['yearsExperience'] ?? '0',
-          aboutMe: doctor['aboutMe'] ??
-              'Experienced healthcare professional dedicated to providing quality medical care.',
-        );
-
         // Navigate to detail screen
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => CareTeamDetailScreen(doctor: doctorModel, profile: profile),
+            builder: (context) => CareTeamDetailScreen(doctor: doctor, profile: profile),
           ),
         );
-        print("##############################################################");
-        print('Tapped on ${doctor['name']}');
-        print("user id: ${profile.user.id}");
-        print("user name: ${profile.user.name}");
-        print("##############################################################");
       },
       child: SizedBox(
         width: 180,
@@ -125,11 +102,12 @@ class _DoctorCard extends StatelessWidget {
                     const Spacer(),
                     IconButton(
                       onPressed: () {
-                        // TODO: favorite toggle
+                          ref.read(careTeamProvider.notifier).removeDoctor(doctor.id);
                       },
-                      icon:  Icon(
-                        AppIcons.heart,
-                        size: 18,
+                      icon: const Icon(
+                          Icons.favorite,
+                          size: 18,
+                          color: Colors.red,
                       ),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
@@ -137,16 +115,22 @@ class _DoctorCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 12),
-                Text(
-                  doctor['name']!,
-                  style: theme.textTheme.bodyLarge,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                Flexible(
+                  child: Text(
+                    doctor.name,
+                    style: theme.textTheme.bodyLarge,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  doctor['specialty']!,
-                  style: theme.textTheme.bodySmall,
+                Flexible(
+                  child: Text(
+                    doctor.specialty,
+                    style: theme.textTheme.bodySmall,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
                 const Spacer(),
                 Row(
@@ -158,7 +142,7 @@ class _DoctorCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      doctor['rating']!,
+                      doctor.rating,
                       style: theme.textTheme.bodySmall,
                     ),
                   ],

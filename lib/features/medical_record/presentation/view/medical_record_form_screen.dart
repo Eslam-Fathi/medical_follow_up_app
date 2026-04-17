@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:medical_follow_up_app/core/utils/responsive_wrapper.dart';
 
 class MedicalRecordFormScreen extends StatefulWidget {
   final String patientDisplayId;
@@ -187,9 +188,11 @@ class _MedicalRecordFormScreenState extends State<MedicalRecordFormScreen> {
       ),
       body: Form(
         key: _formKey,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
+        child: Center(
+          child: ResponsiveWrapper(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 1. Overview
@@ -324,6 +327,8 @@ class _MedicalRecordFormScreenState extends State<MedicalRecordFormScreen> {
                 ),
               )
             ],
+          ),
+            ),
           ),
         ),
       ),
