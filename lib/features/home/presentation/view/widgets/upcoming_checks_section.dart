@@ -35,7 +35,10 @@ class UpcomingChecksSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final appointmentsAsync = ref.watch(appointmentsProvider);
+    final filteredAsync = ref.watch(filteredDashboardAppointmentsProvider);
+    final filterIndex = ref.watch(homeFilterProvider);
+
+    final filterLabels = ['All', 'Upcoming', 'Missed', 'Completed'];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -45,7 +48,7 @@ class UpcomingChecksSection extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Upcoming checks',
+              '${filterLabels[filterIndex]} checks',
               style: theme.textTheme.titleLarge,
             ),
             TextButton(
@@ -56,7 +59,7 @@ class UpcomingChecksSection extends ConsumerWidget {
         ),
         const SizedBox(height: 8),
 
-        appointmentsAsync.when(
+        filteredAsync.when(
           loading: () => const Center(
             child: Padding(
               padding: EdgeInsets.all(24.0),
@@ -67,40 +70,36 @@ class UpcomingChecksSection extends ConsumerWidget {
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Text(
-                'Could not load upcoming checks',
+                'Could not load checks',
                 style: theme.textTheme.bodyMedium?.copyWith(color: Colors.red),
               ),
             ),
           ),
-          data: (allAppointments) {
-            final now = DateTime.now();
-            final upperBoundary = now.add(const Duration(days: 3));
+          data: (filteredItems) {
+            final displayList = [...filteredItems];
+            displayList.sort((a, b) => a.date.compareTo(b.date));
 
-            final upcoming = allAppointments.where((app) {
-              return app.date.isAfter(now) && app.date.isBefore(upperBoundary);
-            }).toList();
-
-            upcoming.sort((a, b) => a.date.compareTo(b.date));
-
-            if (upcoming.isEmpty) {
+            if (displayList.isEmpty) {
               return Card(
                 color: theme.brightness == Brightness.dark
                     ? HealthCareColors.darkCardBackground
-                    : HealthCareColors.primaryLighter.withOpacity(0.35),
-                child: const Padding(
-                  padding: EdgeInsets.all(16.0),
+                    : HealthCareColors.primaryLighter.withOpacity(0.2),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
                   child: Center(
-                    child: Text('No upcoming checks in the next 3 days.'),
+                    child: Text(
+                      'No ${filterLabels[filterIndex].toLowerCase()} checks found.',
+                      style: TextStyle(color: theme.hintColor),
+                    ),
                   ),
                 ),
               );
             }
 
             return Column(
-              children: upcoming.map((app) {
+              children: displayList.take(5).map((app) {
                 final isCompleted = app.status.toUpperCase() == 'COMPLETED';
                 
-                // Fallback title since "checkup name" isn't strictly in the appointment model
                 final specialization = app.doctor.specialization.isNotEmpty 
                     ? app.doctor.specialization 
                     : 'General checkup';
@@ -116,13 +115,10 @@ class UpcomingChecksSection extends ConsumerWidget {
                       ),
                       leading: CircleAvatar(
                         radius: 20,
-                        backgroundColor: Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withOpacity(0.1),
+                        backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
                         child: Icon(
                           isCompleted ? AppIcons.checkCircle : AppIcons.clock,
-                          color: Theme.of(context).colorScheme.primary,
+                          color: theme.colorScheme.primary,
                           size: 20,
                         ),
                       ),
@@ -137,6 +133,7 @@ class UpcomingChecksSection extends ConsumerWidget {
                       trailing: _StatusPill(
                         status: app.status.toUpperCase(),
                         completed: isCompleted,
+                        isMissed: app.isMissed,
                       ),
                     ),
                   ),
@@ -154,10 +151,12 @@ class UpcomingChecksSection extends ConsumerWidget {
 class _StatusPill extends StatelessWidget {
   final String status;
   final bool completed;
+  final bool isMissed;
 
   const _StatusPill({
     required this.status,
     required this.completed,
+    this.isMissed = false,
   });
 
   @override
@@ -165,7 +164,10 @@ class _StatusPill extends StatelessWidget {
     Color bg;
     Color fg;
 
-    if (completed) {
+    if (isMissed) {
+      bg = Colors.red.withOpacity(0.12);
+      fg = Colors.red.shade700;
+    } else if (completed) {
       bg = Colors.green.withOpacity(0.12);
       fg = Colors.green.shade700;
     } else {
@@ -180,7 +182,7 @@ class _StatusPill extends StatelessWidget {
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
-        status,
+        isMissed ? 'MISSED' : status,
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w600,

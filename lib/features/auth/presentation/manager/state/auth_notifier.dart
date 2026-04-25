@@ -8,6 +8,7 @@ import 'package:medical_follow_up_app/core/network/api_providers.dart';
 import 'package:medical_follow_up_app/features/profile/presentation/manager/profile.provider.dart';
 import 'package:medical_follow_up_app/features/appointments/presentation/manager/providers/appointments_provider.dart';
 import 'package:medical_follow_up_app/features/doctors/presentation/manager/care_team_provider.dart';
+import 'package:medical_follow_up_app/core/errors/error_mapper.dart';
 
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthApi _authApi;
@@ -34,7 +35,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       state = state.copyWith(isLoading: false, loginResponse: res);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(isLoading: false, error: mapError(e).message);
     }
   }
 
@@ -63,27 +64,28 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       state = state.copyWith(isLoading: false, loginResponse: res);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(isLoading: false, error: mapError(e).message);
     }
   }
 
   Future<void> logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('auth_token');
-    await prefs.remove('user_id');
-    await prefs.remove('user_name');
-    await prefs.remove('user_email');
-    await prefs.remove('user_role');
-
-    // Clear local care team
-    await _ref.read(careTeamProvider.notifier).clear();
-
-    // Reset core data providers
-    _ref.invalidate(profileProvider);
-    _ref.invalidate(appointmentsProvider);
-    _ref.invalidate(doctorAppointmentsProvider);
-
+    // Set state to empty first so learners (UI/Providers) react immediately
     state = const AuthState();
+
+    final prefs = await SharedPreferences.getInstance();
+    
+    // Parallelize cleanup operations
+    await Future.wait([
+      prefs.remove('auth_token'),
+      prefs.remove('user_id'),
+      prefs.remove('user_name'),
+      prefs.remove('user_email'),
+      prefs.remove('user_role'),
+      _ref.read(careTeamProvider.notifier).clear(),
+    ]);
+
+    // Manual invalidations removed: profileProvider, appointmentsProvider, etc.
+    // already watch authNotifierProvider and will auto-reset when state changes.
   }
 
   Future<void> checkAuthStatus() async {
@@ -111,7 +113,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         state = state.copyWith(isLoading: false);
       }
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(isLoading: false, error: mapError(e).message);
     }
   }
 }

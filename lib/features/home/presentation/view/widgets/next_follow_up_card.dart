@@ -40,13 +40,17 @@ class NextFollowUpCard extends ConsumerWidget {
       required String subtitle,
       Widget? trailing,
     }) {
-      return Card(
-        color: isDark
-            ? HealthCareColors.darkCardBackground
-            : HealthCareColors.primaryLighter.withOpacity(0.35),
+      return Container(
+        decoration: BoxDecoration(
+          color: isDark
+              ? HealthCareColors.darkCardBackground
+              : HealthCareColors.primaryLighter.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: HealthCareColors.primary.withOpacity(0.05)),
+        ),
         clipBehavior: Clip.antiAlias,
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
           child: Row(
             children: [
               Expanded(
@@ -56,13 +60,19 @@ class NextFollowUpCard extends ConsumerWidget {
                     Text(
                       title,
                       style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
                         color: isDark
                             ? HealthCareColors.darkTextPrimary
                             : HealthCareColors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Text(subtitle, style: theme.textTheme.bodyMedium),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.hintColor,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -78,8 +88,15 @@ class NextFollowUpCard extends ConsumerWidget {
       decoration: BoxDecoration(
         color: isDark
             ? HealthCareColors.darkSurface
-            : Colors.white.withOpacity(0.9),
-        borderRadius: BorderRadius.circular(16),
+            : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Icon(AppIcons.activity, size: 32, color: HealthCareColors.primary),
     );
@@ -87,7 +104,7 @@ class NextFollowUpCard extends ConsumerWidget {
     return nextAppointmentAsync.when(
       loading: () => buildFallbackCard(
         title: 'Next follow-up',
-        subtitle: 'checking your appointments...',
+        subtitle: 'Retrieving your medical schedule...',
         trailing: const SizedBox(
           width: 24,
           height: 24,
@@ -100,7 +117,6 @@ class NextFollowUpCard extends ConsumerWidget {
       ),
       data: (appointment) {
         if (appointment == null) {
-          // Provide an alternative UI if there is no data
           return buildFallbackCard(
             title: 'Next follow-up',
             subtitle: 'No upcoming follow-ups scheduled.',
@@ -112,18 +128,21 @@ class NextFollowUpCard extends ConsumerWidget {
         final timeString = _formatTime(nextAppointment.date);
         final dateLabel = _formatDateLabel(nextAppointment.date);
 
-        return Card(
-          color: isDark
-              ? HealthCareColors.darkCardBackground
-              : HealthCareColors.primaryLighter.withOpacity(0.35),
+        return Container(
+          decoration: BoxDecoration(
+            color: isDark
+                ? HealthCareColors.darkCardBackground
+                : HealthCareColors.primaryLighter.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: HealthCareColors.primary.withOpacity(0.05)),
+          ),
           clipBehavior: Clip.antiAlias,
           child: Stack(
             children: [
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
                 child: Row(
                   children: [
-                    // Left: details text
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -131,71 +150,69 @@ class NextFollowUpCard extends ConsumerWidget {
                           Text(
                             'Next follow-up',
                             style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: -0.5,
                               color: isDark
                                   ? HealthCareColors.darkTextPrimary
                                   : HealthCareColors.textPrimary,
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Icon(AppIcons.calendar, size: 16),
-                              const SizedBox(width: 6),
-                              Text(
-                                '$dateLabel • $timeString',
-                                style: theme.textTheme.bodyMedium,
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Icon(AppIcons.mapPin, size: 16),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(
-                                  nextAppointment.status.toUpperCase(),
-                                  style: theme.textTheme.bodySmall,
-                                ),
-                              ),
-                            ],
-                          ),
                           const SizedBox(height: 12),
-                          ElevatedButton.icon(
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: HealthCareColors.primary.withOpacity(0.05),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(AppIcons.calendar, size: 14, color: HealthCareColors.primary),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '$dateLabel • $timeString',
+                                  style: theme.textTheme.labelMedium?.copyWith(
+                                    color: HealthCareColors.primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
                             onPressed: () {
                               // Action for view details
                             },
-                            icon: Icon(AppIcons.arrowRight, size: 16),
-                            label: const Text('View details'),
                             style: ElevatedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 10,
+                                horizontal: 24,
+                                vertical: 12,
                               ),
-                              textStyle: const TextStyle(fontSize: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
                               elevation: 0,
                             ),
+                            child: const Text('View details'),
                           ),
                         ],
                       ),
                     ),
                     const SizedBox(width: 12),
-                    // Right: icon container / illustration
                     trailingIcon,
                   ],
                 ),
               ),
-              // Notification badge indicating there is a follow up today
               Positioned(
-                top: 8,
-                right: 8,
+                top: 12,
+                right: 12,
                 child: Container(
-                  width: 12,
-                  height: 12,
-                  decoration: BoxDecoration(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
                     color: Colors.redAccent,
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 2),
                   ),
                 ),
               ),

@@ -6,6 +6,7 @@ import 'package:medical_follow_up_app/core/theme/light_theme_data.dart';
 import 'package:medical_follow_up_app/core/theme/dark_theme_data.dart';
 import 'package:medical_follow_up_app/core/theme/theme_provider.dart';
 import 'package:medical_follow_up_app/core/utils/scroll_bar_behavior.dart';
+import 'package:medical_follow_up_app/features/auth/presentation/manager/state/auth_state.dart';
 import 'package:medical_follow_up_app/features/auth/presentation/view/auth_switcher.dart';
 import 'package:medical_follow_up_app/features/home/presentation/view/home_screen.dart';
 import 'package:medical_follow_up_app/features/profile/presentation/view/profile_screen.dart';
@@ -14,10 +15,12 @@ import 'package:medical_follow_up_app/features/admin/presentation/view/admin_das
 import 'package:medical_follow_up_app/features/doctors/presentation/view/doctors_list_screen.dart';
 import 'package:medical_follow_up_app/features/appointments/presentation/view/global_notification_wrapper.dart';
 import 'package:medical_follow_up_app/core/services/notification_service.dart';
+import 'package:medical_follow_up_app/features/chat/presentation/manager/chat_provider.dart';
 import 'package:medical_follow_up_app/features/auth/presentation/manager/state/auth_notifier.dart';
 import 'package:medical_follow_up_app/core/widgets/med_splash_screen.dart';
 import 'package:medical_follow_up_app/features/profile/presentation/manager/profile.provider.dart';
 import 'package:medical_follow_up_app/features/appointments/presentation/manager/providers/appointments_provider.dart';
+import 'package:medical_follow_up_app/core/widgets/not_found_screen.dart';
 import 'package:medical_follow_up_app/features/doctors/presentation/manager/doctor_approval_provider.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -34,6 +37,17 @@ class MedME extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Global listener for logout/auth-state changes
+    ref.listen<AuthState>(authNotifierProvider, (previous, next) {
+      if (previous?.loginResponse != null && next.loginResponse == null) {
+        // User just logged out or session became invalid
+        navigatorKey.currentState?.pushNamedAndRemoveUntil(
+          '/auth',
+          (route) => false,
+        );
+      }
+    });
+
     final currentThemeMode = ref.watch(themeModeProvider);
 
     return MaterialApp(
@@ -59,6 +73,11 @@ class MedME extends ConsumerWidget {
         '/admin_dashboard': (_) => const AdminDashboardScreen(),
         '/doctors_list': (_) => const DoctorsListScreen(),
       },
+      onUnknownRoute: (settings) {
+        return MaterialPageRoute(
+          builder: (context) => const NotFoundScreen(),
+        );
+      },
     );
   }
 }
@@ -81,12 +100,12 @@ class _StartPointState extends ConsumerState<StartPoint> {
 
   Future<void> _checkAuth() async {
     final startTime = DateTime.now();
-    
+
     final notifier = ref.read(authNotifierProvider.notifier);
     await notifier.checkAuthStatus();
-    
+
     final state = ref.read(authNotifierProvider);
-    
+
     if (state.loginResponse != null) {
       try {
         if (state.loginResponse!.user.role == 'SUPER_ADMIN') {
@@ -98,9 +117,11 @@ class _StartPointState extends ConsumerState<StartPoint> {
             ref.read(profileProvider.future),
             ref.read(appointmentsProvider.future),
           ]);
+          // Silently warm up chat cache in the background
+          ref.read(chatWarmUpProvider).warmUp();
         }
       } catch (e) {
-        // If data fails to load (e.g. token expired, network error), 
+        // If data fails to load (e.g. token expired, network error),
         // we logout to force a clean state
         await notifier.logout();
       }
@@ -114,7 +135,7 @@ class _StartPointState extends ConsumerState<StartPoint> {
     }
 
     if (!mounted) return;
-    
+
     // Check state again after potential data loading and delay
     final finalState = ref.read(authNotifierProvider);
     if (finalState.loginResponse != null) {

@@ -10,6 +10,7 @@ import 'package:medical_follow_up_app/features/doctors/presentation/view/widgets
 import 'package:medical_follow_up_app/features/doctors/presentation/view/widgets/weekly_schedule_table.dart';
 import 'package:medical_follow_up_app/features/profile/data/network/profile_api.dart';
 import 'package:medical_follow_up_app/core/utils/responsive_wrapper.dart';
+import 'package:medical_follow_up_app/features/doctors/presentation/view/widgets/booking_section.dart';
 
 // import your booking provider + profile model
 // import 'package:medical_follow_up_app/features/appointments/presentation/providers/book_appointment_provider.dart';
@@ -33,31 +34,7 @@ class CareTeamDetailScreen extends ConsumerStatefulWidget {
 class _CareTeamDetailScreenState extends ConsumerState<CareTeamDetailScreen> {
   DateTime? selectedDateTime;
 
-  Future<void> _pickDateTime() async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-    if (date == null) return;
-
-    final time = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-    );
-    if (time == null) return;
-
-    setState(() {
-      selectedDateTime = DateTime(
-        date.year,
-        date.month,
-        date.day,
-        time.hour,
-        time.minute,
-      );
-    });
-  }
+  // DateTime picking is now handled by BookingSection widget
 
   Future<void> _bookAppointment() async {
     if (selectedDateTime == null) {
@@ -290,24 +267,27 @@ class _CareTeamDetailScreenState extends ConsumerState<CareTeamDetailScreen> {
                                 ),
                                 const SizedBox(height: 16),
 
-                                // Pick date/time + Book (wide)
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    OutlinedButton(
-                                      onPressed: _pickDateTime,
-                                      child: Text(
-                                        selectedDateTime == null
-                                            ? 'Select date & time'
-                                            : selectedDateTime.toString(),
+                                // New Booking Section (wide)
+                                Container(
+                                  margin: const EdgeInsets.only(top: 24),
+                                  padding: const EdgeInsets.all(24),
+                                  decoration: BoxDecoration(
+                                    color: isDark ? HealthCareColors.darkSurface : Colors.white,
+                                    borderRadius: BorderRadius.circular(24),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.05),
+                                        blurRadius: 20,
+                                        offset: const Offset(0, 10),
                                       ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    ElevatedButton(
-                                      onPressed: _bookAppointment,
-                                      child: const Text('Book Appointment'),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
+                                  child: BookingSection(
+                                    doctorId: doctor.id,
+                                    isLoading: ref.watch(bookAppointmentProvider).isLoading,
+                                    onDateTimeSelected: (dt) => setState(() => selectedDateTime = dt),
+                                    onBookPressed: _bookAppointment,
+                                  ),
                                 ),
                               ],
                             ),
@@ -431,23 +411,12 @@ class _CareTeamDetailScreenState extends ConsumerState<CareTeamDetailScreen> {
                                   label: const Text('Send Message'),
                                 ),
                               ),
-                              const SizedBox(height: 16),
-                              OutlinedButton(
-                                onPressed: _pickDateTime,
-                                child: Text(
-                                  selectedDateTime == null
-                                      ? 'Select date & time'
-                                      : selectedDateTime.toString(),
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              SizedBox(
-                                width: size.width * 0.7,
-                                height: 48,
-                                child: ElevatedButton(
-                                  onPressed: _bookAppointment,
-                                  child: const Text('Book Appointment'),
-                                ),
+                              const SizedBox(height: 24),
+                              BookingSection(
+                                doctorId: doctor.id,
+                                isLoading: ref.watch(bookAppointmentProvider).isLoading,
+                                onDateTimeSelected: (dt) => setState(() => selectedDateTime = dt),
+                                onBookPressed: _bookAppointment,
                               ),
                             ],
                           ),

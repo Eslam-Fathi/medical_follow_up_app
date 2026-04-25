@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:medical_follow_up_app/core/theme/app_icons.dart';
 import 'package:medical_follow_up_app/core/utils/colors.dart';
-import 'package:medical_follow_up_app/features/home/presentation/view/widgets/mock_record.dart';
-import 'package:medical_follow_up_app/features/medical_record/presentation/view/medical_record_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:medical_follow_up_app/core/theme/theme_provider.dart';
 
@@ -111,38 +109,6 @@ class _DesktopSidebarState extends State<DesktopSidebar> {
                             isSelected: widget.selectedIndex == 3,
                             isExpanded: _isExpanded,
                             onTap: () => widget.onTabSelected(3),
-                          ),
-                          const SizedBox(height: 24),
-                          if (_isExpanded)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 24),
-                              child: Text(
-                                'HEALTH',
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  color: isDark
-                                      ? HealthCareColors.darkTextSecondary
-                                      : HealthCareColors.textSecondary,
-                                  letterSpacing: 1.2,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          const SizedBox(height: 12),
-                          _SidebarItem(
-                            icon: AppIcons.reports,
-                            activeIcon: AppIcons.reports,
-                            label: 'Medical records',
-                            isSelected: false,
-                            isExpanded: _isExpanded,
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => const MedicalRecordScreen(
-                                    patientRecord: kMockPatientRecord,
-                                  ),
-                                ),
-                              );
-                            },
                           ),
                         ],
                       ),

@@ -3,8 +3,13 @@ import 'package:medical_follow_up_app/core/utils/responsive_wrapper.dart';
 
 class MedicalRecordFormScreen extends StatefulWidget {
   final String patientDisplayId;
+  final String patientName;
 
-  const MedicalRecordFormScreen({super.key, required this.patientDisplayId});
+  const MedicalRecordFormScreen({
+    super.key,
+    required this.patientDisplayId,
+    required this.patientName,
+  });
 
   @override
   State<MedicalRecordFormScreen> createState() => _MedicalRecordFormScreenState();
@@ -195,6 +200,41 @@ class _MedicalRecordFormScreenState extends State<MedicalRecordFormScreen> {
               child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // 0. Patient Context Header
+              Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.2)),
+                ),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      child: const Icon(Icons.person, color: Colors.white),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.patientName,
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            'Editing Record for ID: ${widget.patientDisplayId}',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
               // 1. Overview
               Card(
                 elevation: 2,
@@ -204,7 +244,7 @@ class _MedicalRecordFormScreenState extends State<MedicalRecordFormScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text('Patient Overview', style: Theme.of(context).textTheme.titleLarge),
+                      Text('Clinical Overview', style: Theme.of(context).textTheme.titleLarge),
                       const Divider(),
                       _buildTextField('Department', _departmentCtrl),
                       _buildTextField('Admission Date', _admissionDateCtrl, hint: 'YYYY-MM-DD'),

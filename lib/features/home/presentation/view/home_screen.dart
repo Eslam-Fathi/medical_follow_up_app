@@ -17,30 +17,50 @@ import 'package:medical_follow_up_app/features/profile/presentation/view/profile
 import 'package:medical_follow_up_app/features/chatbot/presentation/view/chatbot_screen.dart';
 
 import 'widgets/home_header.dart';
-import 'widgets/search_and_filter_row.dart';
+import 'widgets/home_insights_card.dart';
 import 'widgets/filter_chips_row.dart';
 import 'widgets/next_follow_up_card.dart';
 import 'widgets/upcoming_checks_section.dart';
 import 'widgets/care_team_section.dart';
-import 'widgets/main_drawer.dart';
 import 'widgets/desktop_sidebar.dart';
 import 'widgets/doctor_appointments_section.dart';
 import 'widgets/recent_chats_section.dart';
+import 'widgets/doctor_home_content.dart';
 
 class HomeFollowUpScreen extends ConsumerStatefulWidget {
   const HomeFollowUpScreen({super.key});
 
   @override
-  ConsumerState<HomeFollowUpScreen> createState() =>
-      _HomeFollowUpScreenState();
+  ConsumerState<HomeFollowUpScreen> createState() => _HomeFollowUpScreenState();
 }
 
-class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen> {
+class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen>
+    with SingleTickerProviderStateMixin {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  late AnimationController _controller;
   int _selectedBottomIndex = 0;
-  int _selectedFilterIndex = 0;
-  final List<String> _filters =
-      const ['All', 'Upcoming', 'Missed', 'Completed'];
+  final List<String> _filters = const [
+    'All',
+    'Upcoming',
+    'Missed',
+    'Completed',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   Future<void> _onRefresh() async {
     // Refresh the core providers that drive the home screen
@@ -49,15 +69,44 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen> {
     // nextAppointmentProvider will follow automatically as it watches appointmentsProvider
   }
 
+  Widget _animate(Widget child, int index) {
+    final start = 0.1 * index;
+    final end = start + 0.6;
+    return FadeTransition(
+      opacity: CurvedAnimation(
+        parent: _controller,
+        curve: Interval(
+          start.clamp(0, 1),
+          end.clamp(0, 1),
+          curve: Curves.easeIn,
+        ),
+      ),
+      child: SlideTransition(
+        position: Tween<Offset>(begin: const Offset(0, 0.05), end: Offset.zero)
+            .animate(
+              CurvedAnimation(
+                parent: _controller,
+                curve: Interval(
+                  start.clamp(0, 1),
+                  end.clamp(0, 1),
+                  curve: Curves.easeOut,
+                ),
+              ),
+            ),
+        child: child,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // Listen for profile errors → show SnackBar
     ref.listen(profileProvider, (previous, next) {
       next.whenOrNull(
         error: (err, _) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(err.toString())),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(err.toString())));
         },
       );
     });
@@ -66,9 +115,9 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen> {
     ref.listen(appointmentsProvider, (previous, next) {
       next.whenOrNull(
         error: (err, _) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(err.toString())),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(err.toString())));
         },
       );
     });
@@ -83,12 +132,18 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen> {
     final profileAsync = ref.watch(profileProvider);
 
     return profileAsync.when(
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
-      error: (err, _) => Scaffold(
-        body: Center(child: Text(err.toString())),
-      ),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (err, _) {
+        // If we are logging out, don't show the error, just show loading
+        final auth = ref.read(authNotifierProvider);
+        if (auth.loginResponse == null) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        return Scaffold(body: Center(child: Text(err.toString())));
+      },
       data: (profile) {
         final user = profile.user;
         final patient = profile.patient;
@@ -104,19 +159,6 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen> {
           child: Scaffold(
             key: _scaffoldKey,
             backgroundColor: colorScheme.background,
-            drawer: isMobile
-                ? MainDrawer(
-                    userName: user.name,
-                    userEmail: user.email,
-                    userRole: user.role,
-                    onLogout: () async {
-                      await ref.read(authNotifierProvider.notifier).logout();
-                      if (!context.mounted) return;
-                      Navigator.of(context)
-                          .pushNamedAndRemoveUntil('/auth', (route) => false);
-                    },
-                  )
-                : null,
             endDrawer: isMobile
                 ? SizedBox(
                     width: MediaQuery.of(context).size.width * 0.8,
@@ -137,8 +179,9 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen> {
                   ? _buildDesktopLayout(context, user, patient, doctor, profile)
                   : _buildMobileLayout(context, user, patient, doctor),
             ),
-            bottomNavigationBar:
-                isDesktop ? null : _buildBottomNavigationBar(context),
+            bottomNavigationBar: isDesktop
+                ? null
+                : _buildBottomNavigationBar(context),
           ),
         );
       },
@@ -152,16 +195,11 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen> {
     Map<String, dynamic>? doctor,
   ) {
     if (_selectedBottomIndex == 1) {
-      // Checks tab
       return _buildChecksTab(user);
     }
-
-    // Chatbot tab
     if (_selectedBottomIndex == 2) {
       return const ChatBotScreen();
     }
-
-    // Profile tab
     if (_selectedBottomIndex == 3) {
       return Scaffold(
         appBar: AppBar(
@@ -179,7 +217,6 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen> {
       );
     }
 
-    // Home tab
     final bool isDoctor = user.role.toUpperCase() == 'DOCTOR';
 
     return RefreshIndicator(
@@ -187,44 +224,63 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen> {
       child: ResponsiveWrapper(
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+          padding: const EdgeInsets.symmetric(vertical: 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              HomeHeader(
-                userName: user.name,
-                userRole: user.role,
-                onMenuPressed: () =>
-                    _scaffoldKey.currentState?.openDrawer(),
-                onCareTeamPressed: () =>
-                    _scaffoldKey.currentState?.openEndDrawer(),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: _animate(
+                  HomeHeader(
+                    userName: user.name,
+                    userRole: user.role,
+                    onCareTeamPressed: () =>
+                        _scaffoldKey.currentState?.openEndDrawer(),
+                  ),
+                  0,
+                ),
               ),
-              const SizedBox(height: 24),
-              if (isDoctor) ...[
-                DoctorAppointmentsSection(
-                  onSeeAll: () {
-                    setState(() => _selectedBottomIndex = 1);
-                  },
+              if (isDoctor)
+                _animate(const DoctorHomeContent(), 1)
+              else ...[
+                const SizedBox(height: 24),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: _animate(
+                    HomeInsightsCard(role: user.role, patientRecord: patient),
+                    1,
+                  ),
                 ),
                 const SizedBox(height: 24),
-                const RecentChatsSection(),
-              ] else ...[
-                const SearchAndFilterRow(),
-                const SizedBox(height: 16),
-                FilterChipsRow(
-                  filters: _filters,
-                  selectedIndex: _selectedFilterIndex,
-                  onFilterSelected: (index) {
-                    setState(() => _selectedFilterIndex = index);
-                  },
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: _animate(
+                    FilterChipsRow(
+                      filters: _filters,
+                      selectedIndex: ref.watch(homeFilterProvider),
+                      onFilterSelected: (index) {
+                        ref.read(homeFilterProvider.notifier).state = index;
+                      },
+                    ),
+                    2,
+                  ),
                 ),
                 const SizedBox(height: 24),
-                const NextFollowUpCard(),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: _animate(const NextFollowUpCard(), 3),
+                ),
                 const SizedBox(height: 24),
-                UpcomingChecksSection(
-                  onSeeAll: () {
-                    setState(() => _selectedBottomIndex = 1);
-                  },
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: _animate(
+                    UpcomingChecksSection(
+                      onSeeAll: () {
+                        setState(() => _selectedBottomIndex = 1);
+                      },
+                    ),
+                    4,
+                  ),
                 ),
               ],
             ],
@@ -239,7 +295,7 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen> {
     UserDto user,
     Map<String, dynamic>? patient,
     Map<String, dynamic>? doctor,
-    dynamic profile, // add profile param
+    dynamic profile,
   ) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -258,67 +314,88 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen> {
           onLogout: () async {
             await ref.read(authNotifierProvider.notifier).logout();
             if (!context.mounted) return;
-            Navigator.of(context).pushNamedAndRemoveUntil('/auth', (route) => false);
+            Navigator.of(
+              context,
+            ).pushNamedAndRemoveUntil('/auth', (route) => false);
           },
         ),
-        // CENTER: main content
         Expanded(
           flex: 7,
           child: isChecksTab
-                ? _buildChecksTab(user)
-                : isChatbotTab
-                    ? const ChatBotScreen()
-                    : isProfileTab
-                        ? const ProfileScreen()
-                        : RefreshIndicator(
-                            onRefresh: _onRefresh,
-                            child: SingleChildScrollView(
-                              physics: const AlwaysScrollableScrollPhysics(),
-                              padding:
-                                  const EdgeInsets.fromLTRB(20, 24, 20, 24),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  HomeHeader(
-                                    userName: user.name,
-                                    userRole: user.role,
-                                    onMenuPressed: null,
-                                    onCareTeamPressed: null,
-                                  ),
-                                  const SizedBox(height: 24),
-                                  if (user.role.toUpperCase() == 'DOCTOR') ...[
-                                    DoctorAppointmentsSection(
-                                      onSeeAll: () {
-                                        setState(() => _selectedBottomIndex = 1);
-                                      },
-                                    ),
-                                    const SizedBox(height: 24),
-                                    const RecentChatsSection(),
-                                  ] else ...[
-                                    const SearchAndFilterRow(),
-                                    const SizedBox(height: 16),
-                                    FilterChipsRow(
-                                      filters: _filters,
-                                      selectedIndex: _selectedFilterIndex,
-                                      onFilterSelected: (index) {
-                                        setState(
-                                            () => _selectedFilterIndex = index);
-                                      },
-                                    ),
-                                    const SizedBox(height: 24),
-                                    const NextFollowUpCard(),
-                                    const SizedBox(height: 24),
-                                    UpcomingChecksSection(
-                                      onSeeAll: () {
-                                        setState(() => _selectedBottomIndex = 1);
-                                      },
-                                    ),
-                                  ],
-                                  const SizedBox(height: 24),
-                                ],
+              ? _buildChecksTab(user)
+              : isChatbotTab
+              ? const ChatBotScreen()
+              : isProfileTab
+              ? const ProfileScreen()
+              : RefreshIndicator(
+                  onRefresh: _onRefresh,
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: _animate(
+                            HomeHeader(
+                              userName: user.name,
+                              userRole: user.role,
+                              onCareTeamPressed: null,
+                            ),
+                            0,
+                          ),
+                        ),
+                        if (user.role.toUpperCase() == 'DOCTOR')
+                          _animate(const DoctorHomeContent(), 1)
+                        else ...[
+                          const SizedBox(height: 24),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: _animate(
+                              HomeInsightsCard(
+                                role: user.role,
+                                patientRecord: patient,
                               ),
+                              1,
                             ),
                           ),
+                          const SizedBox(height: 24),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: _animate(
+                              FilterChipsRow(
+                                filters: _filters,
+                                selectedIndex: ref.watch(homeFilterProvider),
+                                onFilterSelected: (index) {
+                                  ref.read(homeFilterProvider.notifier).state = index;
+                                },
+                              ),
+                              2,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: _animate(const NextFollowUpCard(), 3),
+                          ),
+                          const SizedBox(height: 24),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: _animate(
+                              UpcomingChecksSection(
+                                onSeeAll: () {
+                                  setState(() => _selectedBottomIndex = 1);
+                                },
+                              ),
+                              4,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
         ),
 
         // RIGHT: care team
@@ -328,8 +405,7 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen> {
             color: isDark ? HealthCareColors.darkSurface : Colors.white,
             child: SafeArea(
               child: Padding(
-                padding:
-                    const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
                 child: CareTeamSection(
                   profile: profile, // <-- pass here (desktop)
                 ),
@@ -365,8 +441,8 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen> {
             ),
         ],
       ),
-      floatingActionButton: isDoctor 
-          ? null 
+      floatingActionButton: isDoctor
+          ? null
           : FloatingActionButton.extended(
               onPressed: () {
                 Navigator.of(context).pushNamed('/doctors_list');

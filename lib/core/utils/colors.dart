@@ -30,4 +30,24 @@ class HealthCareColors {
   static const Color darkTextPrimary = Color(0xFFF1F5F9);
   static const Color darkTextSecondary = Color(0xFFCBD5E1);
   static const Color darkBorder = Color(0xFF475569);
+
+  // Aurora UI Gradients
+  static const List<Color> auroraGradient = [
+    Color(0xFF6366F1), // Indigo
+    Color(0xFF0EA5E9), // Azure
+  ];
+
+  static const List<Color> auroraDarkGradient = [
+    Color(0xFF4338CA), // Deep Indigo
+    Color(0xFF0369A1), // Deep Azure
+  ];
+
+  // Glassmorphism Helpers
+  static Color glassBackground(bool isDark) => isDark 
+    ? Colors.black.withOpacity(0.3) 
+    : Colors.white.withOpacity(0.7);
+  
+  static Color glassBorder(bool isDark) => isDark 
+    ? Colors.white.withOpacity(0.1) 
+    : Colors.white.withOpacity(0.5);
 }

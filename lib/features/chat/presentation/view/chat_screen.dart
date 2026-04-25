@@ -5,7 +5,9 @@ import 'package:medical_follow_up_app/features/chat/data/models/chat_message_mod
 import 'package:medical_follow_up_app/features/chat/presentation/view/widgets/message_composer_widget.dart';
 import 'package:medical_follow_up_app/features/profile/presentation/manager/profile.provider.dart';
 import 'package:medical_follow_up_app/core/utils/responsive_wrapper.dart';
+import 'package:medical_follow_up_app/core/utils/colors.dart';
 
+import 'package:medical_follow_up_app/features/chat/presentation/manager/chat_provider.dart';
 import 'widgets/chat_bubble_widget.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
@@ -23,41 +25,8 @@ class ChatScreen extends ConsumerStatefulWidget {
 }
 
 class _ChatScreenState extends ConsumerState<ChatScreen> {
-  List<ChatMessage> messages = [];
-  bool _isLoading = true;
-
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _messageController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchHistory();
-  }
-
-  Future<void> _fetchHistory() async {
-    try {
-      final profileState = ref.read(profileProvider).value;
-      if (profileState == null) return;
-      
-      final currentUserId = profileState.user.id;
-      final api = ref.read(chatApiProvider);
-      final history = await api.getHistory(widget.otherUserId, currentUserId);
-      
-      if (mounted) {
-        setState(() {
-          messages = history;
-          _isLoading = false;
-        });
-        _scrollToBottom();
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isLoading = false);
-        // show error
-      }
-    }
-  }
 
   @override
   void dispose() {
@@ -66,39 +35,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     super.dispose();
   }
 
-  Future<void> _sendMessage(String text) async {
+  Future<void> _handleSendMessage(String text) async {
     if (text.trim().isEmpty) return;
-
-    // optimistic UI
-    final tempMsg = ChatMessage(
-        text: text,
-        isFromUser: true,
-        timestamp: DateTime.now(),
-      );
-    setState(() {
-      messages.add(tempMsg);
-    });
-    _messageController.clear();
-    _scrollToBottom();
-
-    // Send to backend
+    
     try {
-      final profileState = ref.read(profileProvider).value;
-      if (profileState == null) return;
-      
-      final currentUserId = profileState.user.id;
-      final api = ref.read(chatApiProvider);
-      
-      final savedMsg = await api.sendMessage(widget.otherUserId, text, currentUserId);
-      
-      // We could replace the tempMsg with savedMsg if we kept its ID, but usually refetch or just let it live is fine.
+      await ref.read(chatHistoryProvider(widget.otherUserId).notifier).sendMessage(text);
+      _messageController.clear();
+      _scrollToBottom();
     } catch (e) {
-      // Revert if failed
-      setState(() {
-        messages.remove(tempMsg);
-      });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to send message: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to send message: $e')),
+        );
       }
     }
   }
@@ -117,60 +65,154 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final chatAsync = ref.watch(chatHistoryProvider(widget.otherUserId));
+
+    // Automatically scroll to bottom when new messages arrive
+    ref.listen(chatHistoryProvider(widget.otherUserId), (prev, next) {
+      if (next.hasValue && (prev?.value?.length ?? 0) < (next.value?.length ?? 0)) {
+        _scrollToBottom();
+      }
+    });
+
     return Scaffold(
+      backgroundColor: isDark ? HealthCareColors.darkBackground : const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: isDark ? HealthCareColors.auroraDarkGradient : HealthCareColors.auroraGradient,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        title: Row(
           children: [
-            Text(widget.chatPartnerName),
-            Text(
-              'Online',
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: Colors.green,
+            Stack(
+              children: [
+                CircleAvatar(
+                  radius: 18,
+                  backgroundColor: Colors.white.withOpacity(0.2),
+                  child: const Icon(Icons.person, color: Colors.white),
+                ),
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: Colors.green,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
                   ),
+                ),
+              ],
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.chatPartnerName,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    'Online',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: Colors.white.withOpacity(0.8),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
-        elevation: 2,
-      ),
-      body: _isLoading 
-        ? const Center(child: CircularProgressIndicator())
-        : Center(
-            child: ResponsiveWrapper(
-              child: Column(
-        children: [
-          // Messages List
-          Expanded(
-            child: messages.isEmpty
-                ? Center(
-                    child: Text(
-                      'No messages yet',
-                      style: Theme.of(context).textTheme.bodyLarge,
-                    ),
-                  )
-                : ListView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    itemCount: messages.length,
-                    itemBuilder: (context, index) {
-                      return ChatBubbleWidget(
-                        message: messages[index],
-                      );
-                    },
-                  ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.videocam_outlined),
+            onPressed: () {},
           ),
-          // Message Composer
-          MessageComposerWidget(
-            controller: _messageController,
-            onSend: _sendMessage,
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            onPressed: () {},
+          ),
+        ],
+        elevation: 0,
+      ),
+      body: ResponsiveWrapper(
+        child: chatAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (err, _) => Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                const SizedBox(height: 16),
+                Text('Failed to load chat: $err'),
+                TextButton(
+                  onPressed: () => ref.invalidate(chatHistoryProvider(widget.otherUserId)),
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          ),
+          data: (messages) => Column(
+            children: [
+              Expanded(
+                child: messages.isEmpty
+                    ? _buildEmptyState(isDark, theme)
+                    : ListView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 24,
+                        ),
+                        itemCount: messages.length,
+                        itemBuilder: (context, index) {
+                          return ChatBubbleWidget(
+                            message: messages[index],
+                          );
+                        },
+                      ),
+              ),
+              MessageComposerWidget(
+                controller: _messageController,
+                onSend: _handleSendMessage,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(bool isDark, ThemeData theme) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.chat_bubble_outline_rounded,
+            size: 64,
+            color: isDark ? Colors.white24 : Colors.black12,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No messages yet',
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: isDark ? Colors.white38 : Colors.black38,
+            ),
           ),
         ],
       ),
-            ),
-          ),
     );
   }
 }

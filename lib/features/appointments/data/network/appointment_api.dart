@@ -8,9 +8,12 @@ class AppointmentsApi {
   final ApiClient _client;
   AppointmentsApi(this._client);
 
-  Future<List<Appointment>> getAppointments() async {
+  Future<List<Appointment>> getAppointments({String? doctorId}) async {
     try {
-      final res = await _client.dio.get('/api/appointments');
+      final res = await _client.dio.get(
+        '/api/appointments',
+        queryParameters: doctorId != null ? {'doctorId': doctorId} : null,
+      );
       final data = res.data as List<dynamic>;
       return data
           .map((e) => Appointment.fromJson(e as Map<String, dynamic>))

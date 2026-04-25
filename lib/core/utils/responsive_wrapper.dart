@@ -28,14 +28,12 @@ class ResponsiveWrapper extends StatelessWidget {
     //    so the "empty space" blends gracefully with the app's overall theme.
     return Container(
       color: backgroundColor ?? Theme.of(context).colorScheme.surface,
-      width: double.infinity,
-      child: Center(
-        // ConstrainedBox limits the maximum width of its child. If the screen is wider 
-        // than [maxWidth], the child will be centered and exactly [maxWidth] wide.
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: maxWidth),
-          child: child,
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: maxWidth,
         ),
+        child: child,
       ),
     );
   }

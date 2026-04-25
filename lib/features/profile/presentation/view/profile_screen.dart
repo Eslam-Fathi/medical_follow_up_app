@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:medical_follow_up_app/core/utils/responsive.dart';
+import 'package:medical_follow_up_app/features/auth/presentation/manager/state/auth_notifier.dart';
 import 'package:medical_follow_up_app/features/profile/presentation/manager/profile.provider.dart';
-
 
 import 'widgets/profile_mobile_layout.dart';
 import 'widgets/profile_desktop_layout.dart';
@@ -18,7 +18,14 @@ class ProfileScreen extends ConsumerWidget {
 
     return profileAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (err, _) => Center(child: Text(err.toString())),
+      error: (err, _) {
+        // If we are logging out, don't show the error, just show loading
+        final auth = ref.read(authNotifierProvider);
+        if (auth.loginResponse == null) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        return Center(child: Text(err.toString()));
+      },
       data: (profile) {
         final user = profile.user;
         final patient = profile.patient;

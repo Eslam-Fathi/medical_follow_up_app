@@ -10,7 +10,8 @@ import 'profile_patient_details_card.dart';
 import 'profile_doctor_details_card.dart';
 import 'profile_settings_card.dart';
 
-/// Desktop layout: two columns (left basic info, right details/settings).
+import 'package:medical_follow_up_app/features/medical_record/presentation/view/medical_record_screen.dart';
+
 /// Desktop layout: two columns (left basic info, right details/settings).
 class ProfileDesktopLayout extends StatelessWidget {
   final UserDto user;
@@ -77,57 +78,57 @@ class ProfileDesktopLayout extends StatelessWidget {
                   ),
 
                   const SizedBox(width: 24),
+                  
+                  // RIGHT: details + settings
                   Expanded(
-  flex: 5,
-  child: Column(
-    children: [
-      // Always show medical card, even if doctor/patient is null
-      ProfileGeneralMedicalCard(patient: patient ?? {}),
-
-      const SizedBox(height: 16),
-
-      if (!isDoctor && patient != null)
-        ProfilePatientDetailsCard(patient: patient!),
-      if (isDoctor && doctor != null)
-        ProfileDoctorDetailsCard(doctor: doctor!),
-
-      const SizedBox(height: 16),
-      Card(
-        elevation: 3,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: const ProfileSettingsCard(),
-      ),
-    ],
-  ),
-)
-
-
-                  // RIGHT: patient/doctor details + settings
-                  // Expanded(
-                  //   flex: 5,
-                  //   child: Column(
-                  //     children: [
+                    flex: 5,
+                    child: Column(
+                      children: [
+                        if (!isDoctor && patient != null) ...[
+                          Card(
+                            elevation: 4,
+                            color: colorScheme.primaryContainer.withOpacity(0.4),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                            child: ListTile(
+                              leading: const Icon(Icons.medical_information),
+                              title: const Text('View Full Medical Record'),
+                              subtitle: const Text('Access your health metrics and detailed history'),
+                              trailing: const Icon(Icons.chevron_right),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => MedicalRecordScreen(
+                                      user: user,
+                                      patientRecord: patient!,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          ProfileGeneralMedicalCard(patient: patient!),
+                          const SizedBox(height: 16),
+                          ProfilePatientDetailsCard(patient: patient!),
+                        ],
                         
-                  //       if (!isDoctor && patient != null) ...[
-                  //         ProfileGeneralMedicalCard(patient: patient!),
-                  //         const SizedBox(height: 16),
-                  //         ProfilePatientDetailsCard(patient: patient!),
-                  //       ],
-                  //       if (isDoctor && doctor != null)
-                  //         ProfileDoctorDetailsCard(doctor: doctor!),
-                  //       const SizedBox(height: 16),
-                  //       Card(
-                  //         elevation: 3,
-                  //         shape: RoundedRectangleBorder(
-                  //           borderRadius: BorderRadius.circular(18),
-                  //         ),
-                  //         child: const ProfileSettingsCard(),
-                  //       ),
-                  //     ],
-                  //   ),
-                  // ),
+                        if (isDoctor && doctor != null)
+                          ProfileDoctorDetailsCard(doctor: doctor!),
+
+                        const SizedBox(height: 16),
+                        Card(
+                          elevation: 3,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          child: const ProfileSettingsCard(),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),

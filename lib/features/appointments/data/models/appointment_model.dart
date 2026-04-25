@@ -74,6 +74,11 @@ class Appointment {
     required this.status,
   });
 
+  /// Client-side check for missed appointments.
+  /// An appointment is considered "Missed" if it remains PENDING 30 minutes after its start time.
+  bool get isMissed => status.toUpperCase() == 'PENDING' && 
+      date.add(const Duration(minutes: 30)).isBefore(DateTime.now());
+
   factory Appointment.fromJson(Map<String, dynamic> json) {
     return Appointment(
       id: json['_id']?.toString() ?? '',

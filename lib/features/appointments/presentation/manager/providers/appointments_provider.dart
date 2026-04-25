@@ -15,16 +15,30 @@ final appointmentsApiProvider = Provider<AppointmentsApi>((ref) {
 final appointmentsProvider =
     FutureProvider<List<Appointment>>((ref) async {
   // Watch auth state to ensure this provider re-runs on logout/login
-  ref.watch(authNotifierProvider);
+  final authState = ref.watch(authNotifierProvider);
+
+  if (authState.loginResponse == null) {
+     return []; // Return empty list when not logged in
+  }
 
   final api = ref.watch(appointmentsApiProvider);
   return api.getAppointments();
 });
 
+final doctorAvailabilityProvider =
+    FutureProvider.family<List<Appointment>, String>((ref, doctorId) async {
+  final api = ref.watch(appointmentsApiProvider);
+  return api.getAppointments(doctorId: doctorId);
+});
+
 final doctorAppointmentsProvider =
     FutureProvider<List<Appointment>>((ref) async {
   // Watch auth state to ensure this provider re-runs on logout/login
-  ref.watch(authNotifierProvider);
+  final authState = ref.watch(authNotifierProvider);
+  
+  if (authState.loginResponse == null) {
+     return []; // Return empty list when not logged in
+  }
   
   final appointments = await ref.watch(appointmentsProvider.future);
   final profileAsync = await ref.watch(profileProvider.future);
@@ -77,6 +91,54 @@ final upcomingRemindersProvider =
   return upcoming;
 });
 
+
+final homeFilterProvider = StateProvider<int>((ref) => 0);
+
+final filteredDashboardAppointmentsProvider = FutureProvider<List<Appointment>>((ref) async {
+  final appointments = await ref.watch(appointmentsProvider.future);
+  final filterIndex = ref.watch(homeFilterProvider);
+  final now = DateTime.now();
+
+  if (appointments.isEmpty) return [];
+
+  switch (filterIndex) {
+    case 1: // Upcoming
+      return appointments.where((app) {
+        return (app.status.toUpperCase() == 'PENDING' || app.status.toUpperCase() == 'CONFIRMED') &&
+               app.date.isAfter(now) &&
+               !app.isMissed;
+      }).toList();
+    case 2: // Missed
+      return appointments.where((app) => app.isMissed).toList();
+    case 3: // Completed
+      return appointments.where((app) => app.status.toUpperCase() == 'COMPLETED').toList();
+    default: // All
+      return appointments;
+  }
+});
+
+final filteredDoctorAppointmentsProvider = FutureProvider<List<Appointment>>((ref) async {
+  final appointments = await ref.watch(doctorAppointmentsProvider.future);
+  final filterIndex = ref.watch(homeFilterProvider);
+  final now = DateTime.now();
+
+  if (appointments.isEmpty) return [];
+
+  switch (filterIndex) {
+    case 1: // Upcoming
+      return appointments.where((app) {
+        return (app.status.toUpperCase() == 'PENDING' || app.status.toUpperCase() == 'CONFIRMED') &&
+               app.date.isAfter(now) &&
+               !app.isMissed;
+      }).toList();
+    case 2: // Missed
+      return appointments.where((app) => app.isMissed).toList();
+    case 3: // Completed
+      return appointments.where((app) => app.status.toUpperCase() == 'COMPLETED').toList();
+    default: // All
+      return appointments;
+  }
+});
 
 class BookAppointmentState {
   final bool isLoading;

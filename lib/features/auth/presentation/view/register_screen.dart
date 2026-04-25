@@ -158,105 +158,121 @@ Future<void> _onRegisterPressed() async {
     final theme = Theme.of(context);
     final state = ref.watch(authNotifierProvider);
 
-    return ResponsiveWrapper(
-      maxWidth: 420,
-      backgroundColor: Colors.transparent,
-      child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Text('Create Account', style: theme.textTheme.headlineSmall),
-                  const SizedBox(height: 24),
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Text('Create Account', style: theme.textTheme.headlineSmall),
+            const SizedBox(height: 24),
 
-                  TextFormField(
-                    controller: _nameController,
-                    decoration: const InputDecoration(labelText: 'Name'),
-                    validator: (v) =>
-                        v == null || v.isEmpty ? 'Name required' : null,
+            TextFormField(
+              controller: _nameController,
+              decoration: const InputDecoration(labelText: 'Name'),
+              validator: (v) =>
+                  v == null || v.isEmpty ? 'Name required' : null,
+            ),
+            const SizedBox(height: 16),
+
+            TextFormField(
+              controller: _emailController,
+              decoration: const InputDecoration(labelText: 'Email'),
+              validator: (v) =>
+                  v == null || v.isEmpty ? 'Email required' : null,
+            ),
+            const SizedBox(height: 16),
+
+            TextFormField(
+              controller: _passwordController,
+              decoration: InputDecoration(
+                labelText: 'Password',
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscurePassword
+                        ? Icons.visibility_off
+                        : Icons.visibility,
                   ),
-                  const SizedBox(height: 16),
+                  onPressed: () {
+                    setState(() {
+                      _obscurePassword = !_obscurePassword;
+                    });
+                  },
+                ),
+              ),
+              obscureText: _obscurePassword,
+              validator: (v) =>
+                  v == null || v.isEmpty ? 'Password required' : null,
+            ),
+            const SizedBox(height: 16),
 
-                  TextFormField(
-                    controller: _emailController,
-                    decoration: const InputDecoration(labelText: 'Email'),
-                    validator: (v) =>
-                        v == null || v.isEmpty ? 'Email required' : null,
-                  ),
-                  const SizedBox(height: 16),
-
-                  TextFormField(
-                    controller: _passwordController,
-                    decoration: InputDecoration(
-                      labelText: 'Password',
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword
-                              ? Icons.visibility_off
-                              : Icons.visibility,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _obscurePassword = !_obscurePassword;
-                          });
-                        },
-                      ),
-                    ),
-                    obscureText: _obscurePassword,
-                    validator: (v) =>
-                        v == null || v.isEmpty ? 'Password required' : null,
-                  ),
-                  const SizedBox(height: 16),
-
-                  SizedBox(
-                    width: double.infinity,
-                    child: SegmentedButton<String>(
-                      segments: const [
-                        ButtonSegment(value: 'PATIENT', label: Text('Patient')),
-                        ButtonSegment(value: 'DOCTOR', label: Text('Doctor')),
-                      ],
-                      selected: {_selectedRole},
-                      onSelectionChanged: (Set<String> newSelection) {
-                        setState(() {
-                          _selectedRole = newSelection.first;
-                        });
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  if (state.error != null)
-                    Text(
-                      state.error!,
-                      style: TextStyle(color: theme.colorScheme.error),
-                    ),
-
-                  const SizedBox(height: 16),
-
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton(
-                      onPressed:
-                          state.isLoading ? null : _onRegisterPressed,
-                      child: state.isLoading
-                          ? const CircularProgressIndicator.adaptive()
-                          : const Text('Create account'),
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // TextButton(
-                  //   onPressed: state.isLoading ? null : widget.onLoginTap,
-                  //   child: const Text('Already have an account? Login'),
-                  // ),
+            SizedBox(
+              width: double.infinity,
+              child: SegmentedButton<String>(
+                segments: const [
+                  ButtonSegment(value: 'PATIENT', label: Text('Patient')),
+                  ButtonSegment(value: 'DOCTOR', label: Text('Doctor')),
                 ],
+                selected: {_selectedRole},
+                onSelectionChanged: (Set<String> newSelection) {
+                  setState(() {
+                    _selectedRole = newSelection.first;
+                  });
+                },
               ),
             ),
-          ),
-       );
+            const SizedBox(height: 16),
+
+            if (state.error != null)
+              Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.errorContainer.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: theme.colorScheme.error.withOpacity(0.3)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.error_outline, color: theme.colorScheme.error, size: 20),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        state.error!,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.error,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            const SizedBox(height: 16),
+
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                onPressed:
+                    state.isLoading ? null : _onRegisterPressed,
+                child: state.isLoading
+                    ? const CircularProgressIndicator.adaptive()
+                    : const Text('Create account'),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // TextButton(
+            //   onPressed: state.isLoading ? null : widget.onLoginTap,
+            //   child: const Text('Already have an account? Login'),
+            // ),
+          ],
+        ),
+      ),
+    );
   }
 }
