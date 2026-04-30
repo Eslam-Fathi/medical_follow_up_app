@@ -4,15 +4,14 @@ import 'package:medical_follow_up_app/core/utils/colors.dart';
 import 'package:medical_follow_up_app/features/appointments/presentation/manager/providers/appointments_provider.dart';
 
 /// A premium dashboard card for the home screen providing quick clinical insights.
+///
+/// - For doctors: shows "Today's Overview" with today’s total & pending appointments.
+/// - For patients: shows simple health stats (blood type + placeholders for vitals).
 class HomeInsightsCard extends ConsumerWidget {
   final String role;
   final Map<String, dynamic>? patientRecord;
 
-  const HomeInsightsCard({
-    super.key,
-    required this.role,
-    this.patientRecord,
-  });
+  const HomeInsightsCard({super.key, required this.role, this.patientRecord});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -23,6 +22,7 @@ class HomeInsightsCard extends ConsumerWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
+        // Gradient background for a "premium" dashboard look.
         gradient: LinearGradient(
           colors: [
             colorScheme.primary,
@@ -43,7 +43,7 @@ class HomeInsightsCard extends ConsumerWidget {
       ),
       child: Stack(
         children: [
-          // Subtle background decoration
+          // Subtle background icon as decoration.
           Positioned(
             right: -20,
             top: -20,
@@ -58,6 +58,7 @@ class HomeInsightsCard extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Header row: title + "Live" badge.
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -70,7 +71,10 @@ class HomeInsightsCard extends ConsumerWidget {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(999),
@@ -86,7 +90,10 @@ class HomeInsightsCard extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: 20),
-                isDoctor ? _buildDoctorInsights(ref, theme) : _buildPatientInsights(theme),
+                // Different content for doctors vs patients.
+                isDoctor
+                    ? _buildDoctorInsights(ref, theme)
+                    : _buildPatientInsights(theme),
               ],
             ),
           ),
@@ -95,36 +102,72 @@ class HomeInsightsCard extends ConsumerWidget {
     );
   }
 
+  /// Doctor view: aggregates today's appointments for quick stats.
   Widget _buildDoctorInsights(WidgetRef ref, ThemeData theme) {
     final appointmentsAsync = ref.watch(doctorAppointmentsProvider);
 
     return appointmentsAsync.when(
       data: (appointments) {
         final now = DateTime.now();
-        final todayApps = appointments.where((a) => 
-          a.date.year == now.year && a.date.month == now.month && a.date.day == now.day
-        ).toList();
-        final pending = todayApps.where((a) => a.status.toUpperCase() == 'PENDING' && !a.isMissed).length;
-        
+
+        // Filter only today's appointments.
+        final todayApps = appointments
+            .where(
+              (a) =>
+                  a.date.year == now.year &&
+                  a.date.month == now.month &&
+                  a.date.day == now.day,
+            )
+            .toList();
+
+        // Count pending & not missed appointments.
+        final pending = todayApps
+            .where((a) => a.status.toUpperCase() == 'PENDING' && !a.isMissed)
+            .length;
+
         return Row(
           children: [
-            _buildStatItem(theme, todayApps.length.toString(), 'Total Today', Icons.people_outline),
+            _buildStatItem(
+              theme,
+              todayApps.length.toString(),
+              'Total Today',
+              Icons.people_outline,
+            ),
             const SizedBox(width: 32),
-            _buildStatItem(theme, pending.toString(), 'Pending', Icons.pending_actions),
+            _buildStatItem(
+              theme,
+              pending.toString(),
+              'Pending',
+              Icons.pending_actions,
+            ),
           ],
         );
       },
-      loading: () => const SizedBox(height: 40, child: Center(child: CircularProgressIndicator(color: Colors.white))),
-      error: (_, __) => const Text('Unable to load stats', style: TextStyle(color: Colors.white70)),
+      loading: () => const SizedBox(
+        height: 40,
+        child: Center(child: CircularProgressIndicator(color: Colors.white)),
+      ),
+      error: (_, __) => const Text(
+        'Unable to load stats',
+        style: TextStyle(color: Colors.white70),
+      ),
     );
   }
 
+  /// Patient view: currently shows blood type and placeholder stats.
+  ///
+  /// In the future you can plug in real vitals from a backend or wearable.
   Widget _buildPatientInsights(ThemeData theme) {
     final bloodType = patientRecord?['bloodType'] ?? '—';
-    // Potential for real vitals here. Using placeholders as discussed.
+
     return Row(
       children: [
-        _buildStatItem(theme, bloodType, 'Blood Type', Icons.water_drop_outlined),
+        _buildStatItem(
+          theme,
+          bloodType,
+          'Blood Type',
+          Icons.water_drop_outlined,
+        ),
         const SizedBox(width: 32),
         _buildStatItem(theme, '—', 'Heart Rate', Icons.favorite_border),
         const SizedBox(width: 32),
@@ -133,7 +176,13 @@ class HomeInsightsCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatItem(ThemeData theme, String value, String label, IconData icon) {
+  /// Reusable stat item (icon + label + value) used in the insights row.
+  Widget _buildStatItem(
+    ThemeData theme,
+    String value,
+    String label,
+    IconData icon,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -143,7 +192,9 @@ class HomeInsightsCard extends ConsumerWidget {
             const SizedBox(width: 6),
             Text(
               label,
-              style: theme.textTheme.labelSmall?.copyWith(color: Colors.white70),
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: Colors.white70,
+              ),
             ),
           ],
         ),

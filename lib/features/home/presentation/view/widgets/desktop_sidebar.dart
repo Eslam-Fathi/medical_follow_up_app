@@ -4,6 +4,13 @@ import 'package:medical_follow_up_app/core/utils/colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:medical_follow_up_app/core/theme/theme_provider.dart';
 
+/// Desktop-only sidebar used in the web/large-screen layout.
+///
+/// Features:
+/// - Hover to expand/collapse (icon-only vs icon+label)
+/// - Main navigation (Home / Checks / Chatbot / Profile)
+/// - Theme toggle (light/dark)
+/// - Logout action at the bottom.
 class DesktopSidebar extends StatefulWidget {
   final int selectedIndex;
   final ValueChanged<int> onTabSelected;
@@ -21,6 +28,7 @@ class DesktopSidebar extends StatefulWidget {
 }
 
 class _DesktopSidebarState extends State<DesktopSidebar> {
+  /// Whether the sidebar is in expanded mode (hover) or compact.
   bool _isExpanded = false;
 
   @override
@@ -54,10 +62,10 @@ class _DesktopSidebarState extends State<DesktopSidebar> {
               child: Column(
                 children: [
                   const SizedBox(height: 24),
-                  // Logo / Header
+                  // Logo / app name at the top.
                   _buildSidebarHeader(isDark, theme),
                   const SizedBox(height: 32),
-                  // Main menu section
+                  // Main menu items.
                   Expanded(
                     child: SingleChildScrollView(
                       child: Column(
@@ -65,7 +73,9 @@ class _DesktopSidebarState extends State<DesktopSidebar> {
                         children: [
                           if (_isExpanded)
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 24),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                              ),
                               child: Text(
                                 'MAIN MENU',
                                 style: theme.textTheme.labelSmall?.copyWith(
@@ -114,14 +124,17 @@ class _DesktopSidebarState extends State<DesktopSidebar> {
                       ),
                     ),
                   ),
-                  // Bottom Action (Logout)
+                  // Bottom actions: theme toggle + logout.
                   const Divider(height: 1),
                   Consumer(
                     builder: (context, ref, child) {
-                      final isDarkMode = ref.watch(themeModeProvider) == ThemeMode.dark;
+                      final isDarkMode =
+                          ref.watch(themeModeProvider) == ThemeMode.dark;
                       return _SidebarItem(
                         icon: isDarkMode ? Icons.light_mode : Icons.dark_mode,
-                        activeIcon: isDarkMode ? Icons.light_mode : Icons.dark_mode,
+                        activeIcon: isDarkMode
+                            ? Icons.light_mode
+                            : Icons.dark_mode,
                         label: isDarkMode ? 'Light Mode' : 'Dark Mode',
                         isSelected: false,
                         isExpanded: _isExpanded,
@@ -151,6 +164,7 @@ class _DesktopSidebarState extends State<DesktopSidebar> {
     );
   }
 
+  /// Builds the top header with logo icon and app name (when expanded).
   Widget _buildSidebarHeader(bool isDark, ThemeData theme) {
     return Container(
       height: 48,
@@ -190,6 +204,9 @@ class _DesktopSidebarState extends State<DesktopSidebar> {
   }
 }
 
+/// A single clickable row in the sidebar (icon [+ text when expanded]).
+///
+/// Handles hover styling and selected state visuals.
 class _SidebarItem extends StatefulWidget {
   final IconData icon;
   final IconData activeIcon;
@@ -220,12 +237,14 @@ class _SidebarItemState extends State<_SidebarItem> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    
+
     final primaryColor = HealthCareColors.primary;
-    final activeBgColor =
-        isDark ? primaryColor.withOpacity(0.15) : primaryColor.withOpacity(0.1);
-    final hoverBgColor =
-        isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05);
+    final activeBgColor = isDark
+        ? primaryColor.withOpacity(0.15)
+        : primaryColor.withOpacity(0.1);
+    final hoverBgColor = isDark
+        ? Colors.white.withOpacity(0.05)
+        : Colors.black.withOpacity(0.05);
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
@@ -238,7 +257,9 @@ class _SidebarItemState extends State<_SidebarItem> {
           duration: const Duration(milliseconds: 200),
           margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           padding: EdgeInsets.symmetric(
-              vertical: 12, horizontal: widget.isExpanded ? 16 : 0),
+            vertical: 12,
+            horizontal: widget.isExpanded ? 16 : 0,
+          ),
           decoration: BoxDecoration(
             color: widget.isSelected
                 ? activeBgColor
@@ -252,11 +273,13 @@ class _SidebarItemState extends State<_SidebarItem> {
             children: [
               Icon(
                 widget.isSelected ? widget.activeIcon : widget.icon,
-                color: widget.iconColor ?? (widget.isSelected
-                    ? primaryColor
-                    : (isDark
-                        ? HealthCareColors.darkTextSecondary
-                        : HealthCareColors.textSecondary)),
+                color:
+                    widget.iconColor ??
+                    (widget.isSelected
+                        ? primaryColor
+                        : (isDark
+                              ? HealthCareColors.darkTextSecondary
+                              : HealthCareColors.textSecondary)),
                 size: 24,
               ),
               if (widget.isExpanded) ...[
@@ -265,13 +288,16 @@ class _SidebarItemState extends State<_SidebarItem> {
                   child: Text(
                     widget.label,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: widget.iconColor ?? (widget.isSelected
-                          ? primaryColor
-                          : (isDark
-                              ? HealthCareColors.darkTextPrimary
-                              : HealthCareColors.textPrimary)),
-                      fontWeight:
-                          widget.isSelected ? FontWeight.bold : FontWeight.w500,
+                      color:
+                          widget.iconColor ??
+                          (widget.isSelected
+                              ? primaryColor
+                              : (isDark
+                                    ? HealthCareColors.darkTextPrimary
+                                    : HealthCareColors.textPrimary)),
+                      fontWeight: widget.isSelected
+                          ? FontWeight.bold
+                          : FontWeight.w500,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

@@ -5,6 +5,11 @@ import 'package:medical_follow_up_app/core/utils/colors.dart';
 import 'package:medical_follow_up_app/features/notifications/presentation/manager/notifications_provider.dart';
 import 'package:medical_follow_up_app/features/notifications/data/models/notification_model.dart';
 
+/// Floating notification center bubble (top-right overlay).
+///
+/// - Shows a blurred, glassy card.
+/// - Lists recent notifications from [notificationsProvider].
+/// - Allows marking individual notifications as read or all at once.
 class NotificationBubble extends ConsumerStatefulWidget {
   const NotificationBubble({super.key});
 
@@ -21,18 +26,23 @@ class _NotificationBubbleState extends ConsumerState<NotificationBubble>
   @override
   void initState() {
     super.initState();
+
+    // Small entrance animation from top with fade + slide.
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 400),
     );
+
     _fadeAnimation = CurvedAnimation(
       parent: _controller,
       curve: Curves.easeOut,
     );
+
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, -0.05),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
+
     _controller.forward();
   }
 
@@ -44,6 +54,7 @@ class _NotificationBubbleState extends ConsumerState<NotificationBubble>
 
   @override
   Widget build(BuildContext context) {
+    // Subscribe to the current list of notifications.
     final notifications = ref.watch(notificationsProvider);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
@@ -79,6 +90,7 @@ class _NotificationBubbleState extends ConsumerState<NotificationBubble>
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(24),
+                // Glassmorphism blur behind the card content.
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
                   child: Column(
@@ -124,12 +136,16 @@ class _NotificationBubbleState extends ConsumerState<NotificationBubble>
     );
   }
 
+  /// Header row: title, unread counter badge, and "Mark all as read" action.
   Widget _buildHeader(
     BuildContext context,
     WidgetRef ref,
     List<AppNotification> notifications,
   ) {
     final theme = Theme.of(context);
+
+    final unreadCount = notifications.where((n) => !n.isRead).length;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 12, 16),
       child: Row(
@@ -144,7 +160,7 @@ class _NotificationBubbleState extends ConsumerState<NotificationBubble>
                 ),
               ),
               const SizedBox(width: 8),
-              if (notifications.any((n) => !n.isRead))
+              if (unreadCount > 0)
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,
@@ -155,7 +171,7 @@ class _NotificationBubbleState extends ConsumerState<NotificationBubble>
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
-                    notifications.where((n) => !n.isRead).length.toString(),
+                    unreadCount.toString(),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 10,
@@ -175,8 +191,10 @@ class _NotificationBubbleState extends ConsumerState<NotificationBubble>
     );
   }
 
+  /// Shown when there are no notifications.
   Widget _buildEmptyState(BuildContext context) {
     final theme = Theme.of(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
       child: Column(
@@ -204,10 +222,11 @@ class _NotificationBubbleState extends ConsumerState<NotificationBubble>
     );
   }
 
+  /// Footer link to open the "full notifications" screen (if implemented).
   Widget _buildFooter(BuildContext context, WidgetRef ref) {
     return InkWell(
       onTap: () {
-        // Navigate to full notifications screen if exists
+        // TODO: Navigate to full notifications screen if exists.
       },
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -225,6 +244,10 @@ class _NotificationBubbleState extends ConsumerState<NotificationBubble>
   }
 }
 
+/// Single notification list item.
+///
+/// - Tapping marks it as read.
+/// - Icon and color depend on [notification.type].
 class _NotificationItem extends ConsumerWidget {
   final AppNotification notification;
 
@@ -240,6 +263,7 @@ class _NotificationItem extends ConsumerWidget {
       },
       child: Container(
         padding: const EdgeInsets.all(16),
+        // Light background highlight for unread items.
         color: notification.isRead
             ? null
             : HealthCareColors.primary.withOpacity(0.03),
@@ -252,6 +276,7 @@ class _NotificationItem extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Title + timestamp row.
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -274,6 +299,7 @@ class _NotificationItem extends ConsumerWidget {
                     ],
                   ),
                   const SizedBox(height: 4),
+                  // Message snippet.
                   Text(
                     notification.message,
                     maxLines: 2,
@@ -292,6 +318,7 @@ class _NotificationItem extends ConsumerWidget {
     );
   }
 
+  /// Icon + color based on notification type.
   Widget _buildIcon() {
     IconData iconData;
     Color color;
@@ -325,6 +352,7 @@ class _NotificationItem extends ConsumerWidget {
     );
   }
 
+  /// Very lightweight "time ago" formatter (m, h, d, or day/month).
   String _formatTimestamp(DateTime dt) {
     final now = DateTime.now();
     final diff = now.difference(dt);

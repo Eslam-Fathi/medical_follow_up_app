@@ -7,13 +7,22 @@ import 'doctor_stat_card.dart';
 import 'appointment_card.dart';
 import 'recent_chats_section.dart';
 
+/// Main content section for doctors on the home screen.
+///
+/// Shows:
+/// - A stats grid (today's total, pending, confirmed, total patients)
+/// - Filtered appointments list (All/Upcoming/Missed/Completed)
+/// - Recent patient chats.
 class DoctorHomeContent extends ConsumerWidget {
   const DoctorHomeContent({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+
+    // Full appointments list for this doctor.
     final appointmentsAsync = ref.watch(doctorAppointmentsProvider);
+    // Filtered subset driven by homeFilterProvider.
     final filteredAsync = ref.watch(filteredDoctorAppointmentsProvider);
     final filterIndex = ref.watch(homeFilterProvider);
 
@@ -23,16 +32,29 @@ class DoctorHomeContent extends ConsumerWidget {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (err, _) => Center(child: Text('Error: $err')),
       data: (appointments) {
-        // Calculate stats (ALWAYS based on full day list for context)
+        // ----- Compute high-level stats from the complete list -----
         final now = DateTime.now();
+
         final todayAppointments = appointments.where((app) {
           return app.date.year == now.year &&
-                 app.date.month == now.month &&
-                 app.date.day == now.day;
+              app.date.month == now.month &&
+              app.date.day == now.day;
         }).toList();
 
-        final pendingCount = appointments.where((app) => app.status.toUpperCase() == 'PENDING' && !app.isMissed).length;
-        final confirmedToday = todayAppointments.where((app) => app.status.toUpperCase() == 'CONFIRMED').length;
+        final pendingCount = appointments
+            .where(
+              (app) => app.status.toUpperCase() == 'PENDING' && !app.isMissed,
+            )
+            .length;
+
+        final confirmedToday = todayAppointments
+            .where((app) => app.status.toUpperCase() == 'CONFIRMED')
+            .length;
+
+        final totalPatients = appointments
+            .map((e) => e.patient.id)
+            .toSet()
+            .length;
 
         return SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
@@ -40,7 +62,8 @@ class DoctorHomeContent extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 24),
-              // Stats Grid
+
+              // ---------- Stats grid (top of dashboard) ----------
               GridView.count(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -69,33 +92,37 @@ class DoctorHomeContent extends ConsumerWidget {
                   ),
                   DoctorStatCard(
                     title: 'Total Patients',
-                    value: appointments.map((e) => e.patient.id).toSet().length.toString(),
+                    value: totalPatients.toString(),
                     icon: Icons.people_outline,
                     color: Colors.teal,
                   ),
                 ],
               ),
+
               const SizedBox(height: 32),
-              
-              // Appointments Heading
+
+              // ---------- Filtered appointments heading ----------
               Text(
                 '${filterLabels[filterIndex]} Appointments',
-                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 16),
-              
-              // Appointments List
+
+              // ---------- Filtered appointments list ----------
               filteredAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (err, _) => Text('Error: $err'),
                 data: (filteredList) {
                   if (filteredList.isEmpty) {
+                    // Empty state when no appointments match the current filter.
                     return Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(32),
                       decoration: BoxDecoration(
-                        color: theme.brightness == Brightness.dark 
-                            ? HealthCareColors.darkSurface 
+                        color: theme.brightness == Brightness.dark
+                            ? HealthCareColors.darkSurface
                             : Colors.grey[100],
                         borderRadius: BorderRadius.circular(20),
                       ),
@@ -122,9 +149,12 @@ class DoctorHomeContent extends ConsumerWidget {
                   );
                 },
               ),
-                
+
               const SizedBox(height: 32),
+
+              // ---------- Recent chats ----------
               const RecentChatsSection(),
+
               const SizedBox(height: 32),
             ],
           ),

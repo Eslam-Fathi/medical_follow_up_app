@@ -1,23 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:medical_follow_up_app/features/profile/presentation/view/widgets/profile_info_row.dart';
 
-/// Extra info for patient role, now collapsible to keep UI clean.
+/// Card that shows **patient‑specific** medical details (chronic diseases,
+/// allergies, notes) in a collapsible "Medical History" section.
+///
+/// It expects a `patient` map coming from the profile API.
 class ProfilePatientDetailsCard extends StatefulWidget {
   final Map<String, dynamic> patient;
 
   const ProfilePatientDetailsCard({super.key, required this.patient});
 
   @override
-  State<ProfilePatientDetailsCard> createState() => _ProfilePatientDetailsCardState();
+  State<ProfilePatientDetailsCard> createState() =>
+      _ProfilePatientDetailsCardState();
 }
 
 class _ProfilePatientDetailsCardState extends State<ProfilePatientDetailsCard> {
+  /// Tracks whether the ExpansionTile is currently expanded.
   bool _isExpanded = false;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
+    /// Helper to convert a List<dynamic> into a comma‑separated string.
+    /// If the list is null or empty, we show "None".
     String formatList(dynamic value) {
       if (value is List && value.isNotEmpty) {
         return value.join(', ');
@@ -39,10 +46,13 @@ class _ProfilePatientDetailsCardState extends State<ProfilePatientDetailsCard> {
           ),
         ],
       ),
+      // Wrap ExpansionTile in a Theme to hide the default Divider.
       child: Theme(
         data: theme.copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
-          onExpansionChanged: (expanded) => setState(() => _isExpanded = expanded),
+          // Keep local state in sync with the tile's expanded state.
+          onExpansionChanged: (expanded) =>
+              setState(() => _isExpanded = expanded),
           tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           leading: Icon(
             Icons.history_edu_rounded,
@@ -56,7 +66,9 @@ class _ProfilePatientDetailsCardState extends State<ProfilePatientDetailsCard> {
             ),
           ),
           subtitle: Text(
-            _isExpanded ? 'Hide detailed records' : 'Allergies, Chronic Diseases...',
+            _isExpanded
+                ? 'Hide detailed records'
+                : 'Allergies, Chronic Diseases...',
             style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
           ),
           children: [
@@ -65,19 +77,25 @@ class _ProfilePatientDetailsCardState extends State<ProfilePatientDetailsCard> {
               child: Column(
                 children: [
                   const Divider(height: 24),
+
+                  /// Chronic diseases list (from patient.chronicDiseases).
                   ProfileInfoRow(
                     icon: Icons.personal_injury_outlined,
                     label: 'Chronic Diseases',
                     value: formatList(widget.patient['chronicDiseases']),
                   ),
                   const SizedBox(height: 12),
+
+                  /// Allergies list (from patient.allergies).
                   ProfileInfoRow(
                     icon: Icons.warning_amber_rounded,
                     label: 'Allergies',
                     value: formatList(widget.patient['allergies']),
                   ),
                   const SizedBox(height: 12),
-                  if (widget.patient['notes'] != null && 
+
+                  /// Optional clinical notes; only shown if non‑empty.
+                  if (widget.patient['notes'] != null &&
                       widget.patient['notes'].toString().isNotEmpty)
                     ProfileInfoRow(
                       icon: Icons.notes_rounded,

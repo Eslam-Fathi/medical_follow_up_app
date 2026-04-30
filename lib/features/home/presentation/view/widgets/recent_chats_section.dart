@@ -5,12 +5,15 @@ import 'package:medical_follow_up_app/core/utils/colors.dart';
 import 'package:medical_follow_up_app/features/appointments/presentation/manager/providers/appointments_provider.dart';
 import 'package:medical_follow_up_app/features/chat/presentation/view/chat_screen.dart';
 
+/// Shows a list of patients the doctor can quickly chat with,
+/// derived from their existing appointments.
 class RecentChatsSection extends ConsumerWidget {
   const RecentChatsSection({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    // For doctors: list of appointments where they are the provider.
     final appointmentsAsync = ref.watch(doctorAppointmentsProvider);
 
     return Column(
@@ -25,10 +28,12 @@ class RecentChatsSection extends ConsumerWidget {
         const SizedBox(height: 12),
         appointmentsAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, _) => const Center(child: Text('Error loading patients')),
+          error: (err, _) =>
+              const Center(child: Text('Error loading patients')),
           data: (appointments) {
-            // Get unique patients from appointments
-            final patients = <String, String>{}; // userId -> name
+            // Build a map of unique patients from appointments:
+            // key = userId, value = patient name.
+            final patients = <String, String>{};
             for (final app in appointments) {
               final id = app.patient.user.id;
               final name = app.patient.user.name;
@@ -38,11 +43,13 @@ class RecentChatsSection extends ConsumerWidget {
             }
 
             if (patients.isEmpty) {
+              // No patients yet → show empty-state placeholder.
               return _buildEmptyPlaceholder(theme);
             }
 
             final patientIds = patients.keys.toList();
 
+            // Render each unique patient as a chat entry card.
             return Column(
               children: patientIds.map((id) {
                 final name = patients[id]!;
@@ -67,6 +74,7 @@ class RecentChatsSection extends ConsumerWidget {
                       color: theme.colorScheme.primary,
                       size: 20,
                     ),
+                    // Tapping opens the 1:1 chat screen with that patient.
                     onTap: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
@@ -87,6 +95,7 @@ class RecentChatsSection extends ConsumerWidget {
     );
   }
 
+  /// Placeholder shown when there are no recent patients to chat with.
   Widget _buildEmptyPlaceholder(ThemeData theme) {
     return Container(
       width: double.infinity,

@@ -8,8 +8,15 @@ import 'package:medical_follow_up_app/features/doctors/presentation/view/care_te
 import 'package:medical_follow_up_app/features/doctors/presentation/view/my_care_team_screen.dart';
 import 'package:medical_follow_up_app/features/profile/data/network/profile_api.dart';
 
+/// Home section showing the user's current care team.
+///
+/// Data source:
+/// - [careTeamProvider] backed by shared_preferences (favorites list).
+/// Actions:
+/// - "See all" opens full care team screen
+/// - Tapping a card opens doctor detail for that care team member.
 class CareTeamSection extends ConsumerWidget {
-final ProfileResponse profile;
+  final ProfileResponse profile;
 
   const CareTeamSection({super.key, required this.profile});
 
@@ -17,35 +24,42 @@ final ProfileResponse profile;
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
-    // Read doctors from the shared_preferences provider
+    // Current care team doctors loaded via Riverpod (persisted locally).
     final doctors = ref.watch(careTeamProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Section header
+        // Section header: title + "See all" navigation.
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Your care team',
-              style: theme.textTheme.titleLarge,
-            ),
+            Text('Your care team', style: theme.textTheme.titleLarge),
             TextButton(
               onPressed: () {
-                Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => const MyCareTeamScreen()
-                ));
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const MyCareTeamScreen(),
+                  ),
+                );
               },
               child: const Text('See all'),
             ),
           ],
         ),
         const SizedBox(height: 8),
+
+        // Horizontal list of doctor cards, or an empty message.
         SizedBox(
-          height: 170, // Increased height to prevent vertical overflow
-          child: doctors.isEmpty 
-              ? const Center(child: Text("No doctors added to care team yet.\nPlease add them from the doctor list.", textAlign: TextAlign.center))
+          height: 170, // Enough height to avoid overflow in the card.
+          child: doctors.isEmpty
+              ? const Center(
+                  child: Text(
+                    'No doctors added to care team yet.\n'
+                    'Please add them from the doctor list.',
+                    textAlign: TextAlign.center,
+                  ),
+                )
               : ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: doctors.length,
@@ -61,6 +75,13 @@ final ProfileResponse profile;
   }
 }
 
+/// Single doctor card used inside [CareTeamSection].
+///
+/// Shows:
+/// - Avatar with doctor icon
+/// - Name and specialty (single line each)
+/// - Rating
+/// - Heart icon to remove the doctor from the care team.
 class _DoctorCard extends ConsumerWidget {
   final ProfileResponse profile;
   final DoctorModel doctor;
@@ -72,11 +93,12 @@ class _DoctorCard extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return GestureDetector(
+      // Open care team detail screen for the selected doctor.
       onTap: () {
-        // Navigate to detail screen
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => CareTeamDetailScreen(doctor: doctor, profile: profile),
+            builder: (context) =>
+                CareTeamDetailScreen(doctor: doctor, profile: profile),
           ),
         );
       },
@@ -90,7 +112,7 @@ class _DoctorCard extends ConsumerWidget {
               children: [
                 Row(
                   children: [
-                     CircleAvatar(
+                    CircleAvatar(
                       radius: 18,
                       backgroundColor: HealthCareColors.primary,
                       child: Icon(
@@ -100,14 +122,17 @@ class _DoctorCard extends ConsumerWidget {
                       ),
                     ),
                     const Spacer(),
+                    // Remove from care team (toggle favorite off).
                     IconButton(
                       onPressed: () {
-                          ref.read(careTeamProvider.notifier).removeDoctor(doctor.id);
+                        ref
+                            .read(careTeamProvider.notifier)
+                            .removeDoctor(doctor.id);
                       },
                       icon: const Icon(
-                          Icons.favorite,
-                          size: 18,
-                          color: Colors.red,
+                        Icons.favorite,
+                        size: 18,
+                        color: Colors.red,
                       ),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
@@ -115,6 +140,7 @@ class _DoctorCard extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: 12),
+                // Doctor name (single line, ellipsis).
                 Flexible(
                   child: Text(
                     doctor.name,
@@ -124,6 +150,7 @@ class _DoctorCard extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
+                // Doctor specialty (single line, ellipsis).
                 Flexible(
                   child: Text(
                     doctor.specialty,
@@ -133,18 +160,12 @@ class _DoctorCard extends ConsumerWidget {
                   ),
                 ),
                 const Spacer(),
+                // Rating row.
                 Row(
                   children: [
-                     Icon(
-                      AppIcons.starFilled,
-                      size: 14,
-                      color: Colors.amber,
-                    ),
+                    Icon(AppIcons.starFilled, size: 14, color: Colors.amber),
                     const SizedBox(width: 4),
-                    Text(
-                      doctor.rating,
-                      style: theme.textTheme.bodySmall,
-                    ),
+                    Text(doctor.rating, style: theme.textTheme.bodySmall),
                   ],
                 ),
               ],

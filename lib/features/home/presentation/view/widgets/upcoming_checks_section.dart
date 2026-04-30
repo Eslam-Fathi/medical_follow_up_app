@@ -5,18 +5,28 @@ import 'package:medical_follow_up_app/core/utils/colors.dart';
 import 'package:medical_follow_up_app/features/appointments/presentation/manager/providers/appointments_provider.dart';
 import 'package:medical_follow_up_app/features/appointments/data/models/appointment_model.dart';
 
+/// Dashboard section showing a small list of upcoming/filtered checks.
+///
+/// Uses [filteredDashboardAppointmentsProvider] and [homeFilterProvider]
+/// to drive both the title and the visible list.
 class UpcomingChecksSection extends ConsumerWidget {
   final VoidCallback onSeeAll;
 
   const UpcomingChecksSection({super.key, required this.onSeeAll});
 
+  /// Formats an appointment date as:
+  /// - "Today • 2:30 PM"
+  /// - "Tomorrow • 9:00 AM"
+  /// - "In 2 days • 4:00 PM"
+  /// - "5 May • 11:00 AM" for further dates.
   String _formatDate(DateTime date) {
     final now = DateTime.now();
-    // Reset to start of day for accurate day-difference calculation
+    // Reset to start of day for accurate day-difference calculation.
     final dateDay = DateTime(date.year, date.month, date.day);
     final nowDay = DateTime(now.year, now.month, now.day);
     final difference = dateDay.difference(nowDay).inDays;
-    
+
+    // Build 12‑hour time string.
     final h = date.hour;
     final m = date.minute.toString().padLeft(2, '0');
     final period = h >= 12 ? 'PM' : 'AM';
@@ -27,14 +37,29 @@ class UpcomingChecksSection extends ConsumerWidget {
     if (difference == 1) return 'Tomorrow • $timeStr';
     if (difference == 2) return 'In 2 days • $timeStr';
     if (difference == 3) return 'In 3 days • $timeStr';
-    
-    final months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    final months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     return '${date.day} ${months[date.month - 1]} • $timeStr';
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+
+    // Appointments list already filtered by homeFilterProvider.
     final filteredAsync = ref.watch(filteredDashboardAppointmentsProvider);
     final filterIndex = ref.watch(homeFilterProvider);
 
@@ -43,7 +68,7 @@ class UpcomingChecksSection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header
+        // Header: "{Filter} checks" + "See all" action.
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -51,10 +76,7 @@ class UpcomingChecksSection extends ConsumerWidget {
               '${filterLabels[filterIndex]} checks',
               style: theme.textTheme.titleLarge,
             ),
-            TextButton(
-              onPressed: onSeeAll,
-              child: const Text('See all'),
-            ),
+            TextButton(onPressed: onSeeAll, child: const Text('See all')),
           ],
         ),
         const SizedBox(height: 8),
@@ -76,10 +98,12 @@ class UpcomingChecksSection extends ConsumerWidget {
             ),
           ),
           data: (filteredItems) {
+            // Sort by date ascending before showing.
             final displayList = [...filteredItems];
             displayList.sort((a, b) => a.date.compareTo(b.date));
 
             if (displayList.isEmpty) {
+              // Empty-state card when there are no items for the current filter.
               return Card(
                 color: theme.brightness == Brightness.dark
                     ? HealthCareColors.darkCardBackground
@@ -96,12 +120,13 @@ class UpcomingChecksSection extends ConsumerWidget {
               );
             }
 
+            // Render up to 5 items as small cards.
             return Column(
               children: displayList.take(5).map((app) {
                 final isCompleted = app.status.toUpperCase() == 'COMPLETED';
-                
-                final specialization = app.doctor.specialization.isNotEmpty 
-                    ? app.doctor.specialization 
+
+                final specialization = app.doctor.specialization.isNotEmpty
+                    ? app.doctor.specialization
                     : 'General checkup';
                 final title = 'Follow-up • $specialization';
 
@@ -115,17 +140,16 @@ class UpcomingChecksSection extends ConsumerWidget {
                       ),
                       leading: CircleAvatar(
                         radius: 20,
-                        backgroundColor: theme.colorScheme.primary.withOpacity(0.1),
+                        backgroundColor: theme.colorScheme.primary.withOpacity(
+                          0.1,
+                        ),
                         child: Icon(
                           isCompleted ? AppIcons.checkCircle : AppIcons.clock,
                           color: theme.colorScheme.primary,
                           size: 20,
                         ),
                       ),
-                      title: Text(
-                        title,
-                        style: theme.textTheme.bodyLarge,
-                      ),
+                      title: Text(title, style: theme.textTheme.bodyLarge),
                       subtitle: Text(
                         _formatDate(app.date),
                         style: theme.textTheme.bodySmall,
@@ -147,7 +171,7 @@ class UpcomingChecksSection extends ConsumerWidget {
   }
 }
 
-// Internal widget for the pill
+/// Small pill used to display appointment status (MISSED, COMPLETED, etc.).
 class _StatusPill extends StatelessWidget {
   final String status;
   final bool completed;
@@ -183,11 +207,7 @@ class _StatusPill extends StatelessWidget {
       ),
       child: Text(
         isMissed ? 'MISSED' : status,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          color: fg,
-        ),
+        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: fg),
       ),
     );
   }

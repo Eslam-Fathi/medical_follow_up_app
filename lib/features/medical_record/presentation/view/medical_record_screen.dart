@@ -3,6 +3,11 @@ import 'package:medical_follow_up_app/core/utils/responsive.dart';
 import 'package:medical_follow_up_app/core/utils/responsive_wrapper.dart';
 import 'package:medical_follow_up_app/features/auth/data/models/login/login_response.dart';
 
+/// Read-only view of a single patient's admission record.
+///
+/// Adapts between mobile/tablet and desktop by:
+/// - constraining max width
+/// - switching some sections to side-by-side on desktop.
 class MedicalRecordScreen extends StatelessWidget {
   final UserDto user;
   final Map<String, dynamic> patientRecord;
@@ -30,7 +35,7 @@ class MedicalRecordScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // MAIN CARD CONTAINER
+                // Main container card that holds all sections.
                 Card(
                   elevation: 14,
                   shadowColor: colorScheme.shadow.withOpacity(0.25),
@@ -47,6 +52,8 @@ class MedicalRecordScreen extends StatelessWidget {
                         const SizedBox(height: 16),
                         _buildDemographicsCard(context),
                         const SizedBox(height: 16),
+                        // Layout respiratory + cardio side-by-side on desktop,
+                        // stacked vertically on smaller screens.
                         if (isDesktop)
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -75,11 +82,15 @@ class MedicalRecordScreen extends StatelessWidget {
 
   // ---------------- HELPERS ----------------
 
+  /// Normalizes a field value from [patientRecord].
+  ///
+  /// Returns "—" when the value is null or empty.
   String _val(dynamic value) {
     if (value == null || value.toString().trim().isEmpty) return '—';
     return value.toString();
   }
 
+  /// Placeholder widget for entirely empty sections.
   Widget _emptySection() {
     return const Padding(
       padding: EdgeInsets.symmetric(vertical: 8),
@@ -98,6 +109,7 @@ class MedicalRecordScreen extends StatelessWidget {
 
   // ---------------- HEADER ----------------
 
+  /// Top header: avatar initials + patient name + display ID.
   Widget _buildHeader(BuildContext context) {
     final theme = Theme.of(context);
     final name = user.name;
@@ -154,6 +166,7 @@ class MedicalRecordScreen extends StatelessWidget {
 
   // ---------------- DEMOGRAPHICS ----------------
 
+  /// General patient overview section (department, gender, age, etc.).
   Widget _buildDemographicsCard(BuildContext context) {
     return _sectionCard(
       context,
@@ -161,6 +174,7 @@ class MedicalRecordScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Quick facts as chips (wrap to next line when space is tight).
           Wrap(
             spacing: 12,
             runSpacing: 8,
@@ -224,10 +238,11 @@ class MedicalRecordScreen extends StatelessWidget {
 
   // ---------------- RESPIRATORY ----------------
 
+  /// Respiratory system section: type, rate, O2, therapy details, etc.
   Widget _buildRespiratoryCard(BuildContext context) {
     final theme = Theme.of(context);
 
-    // Check if the whole section is empty
+    // Check if the whole section is empty.
     final isEmpty =
         patientRecord['respType'] == null &&
         patientRecord['respRate'] == null &&
@@ -290,6 +305,7 @@ class MedicalRecordScreen extends StatelessWidget {
 
   // ---------------- CARDIOVASCULAR ----------------
 
+  /// Cardiovascular system section: pulses, BP series, MAP, etc.
   Widget _buildCardioCard(BuildContext context) {
     final pulseSeries = (patientRecord['pulseSeries'] as List?) ?? const [];
     final isEmpty =
@@ -356,12 +372,14 @@ class MedicalRecordScreen extends StatelessWidget {
 
   // ---------------- UI COMPONENTS ----------------
 
+  /// Shared card wrapper for each logical section (overview, resp, cardio).
   Widget _sectionCard(
     BuildContext context, {
     required String title,
     required Widget child,
   }) {
     final theme = Theme.of(context);
+
     return Card(
       elevation: 0,
       color: theme.colorScheme.surfaceVariant.withOpacity(0.2),
@@ -385,8 +403,10 @@ class MedicalRecordScreen extends StatelessWidget {
     );
   }
 
+  /// Small pill-like chip for quick facts (label + value).
   Widget _infoChip(BuildContext context, String label, String value) {
     final theme = Theme.of(context);
+
     return Chip(
       label: Text('$label: $value', style: theme.textTheme.bodySmall),
       backgroundColor: theme.colorScheme.surfaceVariant.withOpacity(0.6),
@@ -394,8 +414,10 @@ class MedicalRecordScreen extends StatelessWidget {
     );
   }
 
+  /// Label on the left, value on the right, used for most fields.
   Widget _twoColRow(BuildContext context, String label, String value) {
     final theme = Theme.of(context);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Row(

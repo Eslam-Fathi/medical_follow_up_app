@@ -1,6 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:medical_follow_up_app/core/utils/responsive_wrapper.dart';
 
+/// Form screen used by clinicians to create/update a patient's
+/// detailed medical record.
+///
+/// It builds a large payload map from multiple sections:
+/// - Clinical overview
+/// - Medications
+/// - Respiratory system
+/// - Cardiovascular system
 class MedicalRecordFormScreen extends StatefulWidget {
   final String patientDisplayId;
   final String patientName;
@@ -12,12 +20,14 @@ class MedicalRecordFormScreen extends StatefulWidget {
   });
 
   @override
-  State<MedicalRecordFormScreen> createState() => _MedicalRecordFormScreenState();
+  State<MedicalRecordFormScreen> createState() =>
+      _MedicalRecordFormScreenState();
 }
 
 class _MedicalRecordFormScreenState extends State<MedicalRecordFormScreen> {
   final _formKey = GlobalKey<FormState>();
 
+  // ---------------- CONTROLLERS ----------------
   // Overview controllers
   final _departmentCtrl = TextEditingController();
   final _admissionDateCtrl = TextEditingController();
@@ -32,8 +42,8 @@ class _MedicalRecordFormScreenState extends State<MedicalRecordFormScreen> {
   final _medicalDiagnosisCtrl = TextEditingController();
   final _complicationsCtrl = TextEditingController();
 
-  // Medications
-  final _medicationsCtrl = TextEditingController(); // comma separated
+  // Medications (comma separated)
+  final _medicationsCtrl = TextEditingController();
 
   // Respiratory controllers
   final _respTypeCtrl = TextEditingController();
@@ -66,6 +76,7 @@ class _MedicalRecordFormScreenState extends State<MedicalRecordFormScreen> {
 
   @override
   void dispose() {
+    // Dispose all controllers to free resources.
     _departmentCtrl.dispose();
     _admissionDateCtrl.dispose();
     _bedNoCtrl.dispose();
@@ -105,14 +116,26 @@ class _MedicalRecordFormScreenState extends State<MedicalRecordFormScreen> {
     super.dispose();
   }
 
+  /// Validates the form, builds a payload map, and (for now) prints it.
+  ///
+  /// This is the place to plug your API call or Riverpod notifier.
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
-    
-    // Parse arrays
-    final meds = _medicationsCtrl.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
-    final pulsesStr = _pulseSeriesCtrl.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+
+    // Parse comma-separated arrays.
+    final meds = _medicationsCtrl.text
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+    final pulsesStr = _pulseSeriesCtrl.text
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
     final pulses = pulsesStr.map((e) => int.tryParse(e) ?? 0).toList();
 
+    // Build payload matching the backend medical record schema.
     final payload = {
       "id": widget.patientDisplayId,
       "department": _departmentCtrl.text,
@@ -153,16 +176,23 @@ class _MedicalRecordFormScreenState extends State<MedicalRecordFormScreen> {
       "map": _mapCtrl.text,
     };
 
-    // Print payload for now, or connect to an API provider
+    // For now, just log the payload. Replace with API call later.
     print(payload);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Medical Record form saved!')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Medical Record form saved!')));
     Navigator.of(context).pop();
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, {TextInputType? keyboardType, String? hint}) {
+  /// Shared helper to generate a labeled text field with optional
+  /// keyboardType and hint text.
+  Widget _buildTextField(
+    String label,
+    TextEditingController controller, {
+    TextInputType? keyboardType,
+    String? hint,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
       child: TextFormField(
@@ -172,7 +202,10 @@ class _MedicalRecordFormScreenState extends State<MedicalRecordFormScreen> {
           labelText: label,
           hintText: hint,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
+          ),
         ),
       ),
     );
@@ -198,176 +231,286 @@ class _MedicalRecordFormScreenState extends State<MedicalRecordFormScreen> {
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 0. Patient Context Header
-              Container(
-                margin: const EdgeInsets.only(bottom: 16),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.2)),
-                ),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      child: const Icon(Icons.person, color: Colors.white),
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 0. Patient Context Header
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 16),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
+                    decoration: BoxDecoration(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primaryContainer.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withOpacity(0.2),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primary,
+                          child: const Icon(Icons.person, color: Colors.white),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                widget.patientName,
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                'Editing Record for ID: ${widget.patientDisplayId}',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // 1. Clinical Overview section.
+                  Card(
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Text(
-                            widget.patientName,
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                            'Clinical Overview',
+                            style: Theme.of(context).textTheme.titleLarge,
                           ),
+                          const Divider(),
+                          _buildTextField('Department', _departmentCtrl),
+                          _buildTextField(
+                            'Admission Date',
+                            _admissionDateCtrl,
+                            hint: 'YYYY-MM-DD',
+                          ),
+                          _buildTextField('Bed No', _bedNoCtrl),
+                          _buildTextField('Allergies', _allergiesTextCtrl),
+                          _buildTextField(
+                            'Previous Surgeries',
+                            _previousSurgeriesCtrl,
+                          ),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildTextField(
+                                  'Admission Weight',
+                                  _admissionWeightCtrl,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: _buildTextField(
+                                  'Today Weight',
+                                  _todayWeightCtrl,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildTextField('Height', _heightCtrl),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(child: _buildTextField('BMI', _bmiCtrl)),
+                            ],
+                          ),
+                          _buildTextField(
+                            'Admission Reason',
+                            _admissionReasonCtrl,
+                          ),
+                          _buildTextField(
+                            'Medical Diagnosis',
+                            _medicalDiagnosisCtrl,
+                          ),
+                          _buildTextField('Complications', _complicationsCtrl),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // 2. Medications section.
+                  Card(
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
                           Text(
-                            'Editing Record for ID: ${widget.patientDisplayId}',
-                            style: Theme.of(context).textTheme.bodySmall,
+                            'Medications',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          const SizedBox(height: 8),
+                          _buildTextField(
+                            'Medications',
+                            _medicationsCtrl,
+                            hint:
+                                'Comma separated (e.g. Aspirin 81mg, Bisoprolol 5mg)',
                           ),
                         ],
                       ),
                     ),
-                  ],
-                ),
-              ),
+                  ),
+                  const SizedBox(height: 16),
 
-              // 1. Overview
-              Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text('Clinical Overview', style: Theme.of(context).textTheme.titleLarge),
-                      const Divider(),
-                      _buildTextField('Department', _departmentCtrl),
-                      _buildTextField('Admission Date', _admissionDateCtrl, hint: 'YYYY-MM-DD'),
-                      _buildTextField('Bed No', _bedNoCtrl),
-                      _buildTextField('Allergies', _allergiesTextCtrl),
-                      _buildTextField('Previous Surgeries', _previousSurgeriesCtrl),
-                      Row(
+                  // 3. Respiratory section.
+                  Card(
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Expanded(child: _buildTextField('Admission Weight', _admissionWeightCtrl)),
-                          const SizedBox(width: 8),
-                          Expanded(child: _buildTextField('Today Weight', _todayWeightCtrl)),
+                          Text(
+                            'Respiratory System',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          const Divider(),
+                          _buildTextField('Respiratory Type', _respTypeCtrl),
+                          _buildTextField('Rhythm', _respRhythmCtrl),
+                          _buildTextField(
+                            'Rate',
+                            _respRateCtrl,
+                            keyboardType: TextInputType.number,
+                          ),
+                          _buildTextField('Pattern', _respPatternCtrl),
+                          _buildTextField(
+                            'Chest Excursion',
+                            _chestExcursionCtrl,
+                          ),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildTextField(
+                                  'O2 %',
+                                  _o2PercentCtrl,
+                                  keyboardType: TextInputType.number,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: _buildTextField(
+                                  'O2 Flow',
+                                  _o2FlowCtrl,
+                                  keyboardType: TextInputType.number,
+                                ),
+                              ),
+                            ],
+                          ),
+                          _buildTextField('O2 Device', _o2DeviceCtrl),
+                          _buildTextField(
+                            'Bronchial Hygiene',
+                            _bronchialHygieneCtrl,
+                          ),
+                          _buildTextField(
+                            'O2 Sat %',
+                            _o2SatCtrl,
+                            keyboardType: TextInputType.number,
+                          ),
+                          _buildTextField('ABG', _abgCtrl),
+                          _buildTextField(
+                            'Incentive Spirometer',
+                            _incentiveSpirometerCtrl,
+                          ),
+                          _buildTextField('MDI Inhaler', _mdiInhalerCtrl),
+                          _buildTextField('Breath Sounds', _breathSoundsCtrl),
+                          _buildTextField('Cough', _coughCtrl),
+                          _buildTextField('Chest Tube', _chestTubeCtrl),
                         ],
                       ),
-                      Row(
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // 4. Cardiovascular section.
+                  Card(
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Expanded(child: _buildTextField('Height', _heightCtrl)),
-                          const SizedBox(width: 8),
-                          Expanded(child: _buildTextField('BMI', _bmiCtrl)),
+                          Text(
+                            'Cardiovascular System',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          const Divider(),
+                          _buildTextField(
+                            'Pulse Series',
+                            _pulseSeriesCtrl,
+                            hint: 'Comma separated ints (e.g. 78, 82, 80)',
+                          ),
+                          _buildTextField(
+                            'Pulse Rate',
+                            _pulseRateCtrl,
+                            keyboardType: TextInputType.number,
+                          ),
+                          _buildTextField('Pulse Rhythm', _pulseRhythmCtrl),
+                          _buildTextField(
+                            'Pulse Amplitude',
+                            _pulseAmplitudeCtrl,
+                          ),
+                          _buildTextField('Heart Sounds', _heartSoundsCtrl),
+                          _buildTextField('BP Series', _bpSeriesCtrl),
+                          _buildTextField('MAP', _mapCtrl),
                         ],
                       ),
-                      _buildTextField('Admission Reason', _admissionReasonCtrl),
-                      _buildTextField('Medical Diagnosis', _medicalDiagnosisCtrl),
-                      _buildTextField('Complications', _complicationsCtrl),
-                    ],
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 16),
+                  const SizedBox(height: 32),
 
-              // 2. Medications
-              Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text('Medications', style: Theme.of(context).textTheme.titleLarge),
-                      const SizedBox(height: 8),
-                      _buildTextField('Medications', _medicationsCtrl, hint: 'Comma separated (e.g. Aspirin 81mg, Bisoprolol 5mg)'),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // 3. Respiratory
-              Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text('Respiratory System', style: Theme.of(context).textTheme.titleLarge),
-                      const Divider(),
-                      _buildTextField('Respiratory Type', _respTypeCtrl),
-                      _buildTextField('Rhythm', _respRhythmCtrl),
-                      _buildTextField('Rate', _respRateCtrl, keyboardType: TextInputType.number),
-                      _buildTextField('Pattern', _respPatternCtrl),
-                      _buildTextField('Chest Excursion', _chestExcursionCtrl),
-                      Row(
-                        children: [
-                          Expanded(child: _buildTextField('O2 %', _o2PercentCtrl, keyboardType: TextInputType.number)),
-                          const SizedBox(width: 8),
-                          Expanded(child: _buildTextField('O2 Flow', _o2FlowCtrl, keyboardType: TextInputType.number)),
-                        ],
+                  // Bottom save button (duplicates AppBar action for convenience).
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton.icon(
+                      onPressed: _submit,
+                      icon: _isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Icon(Icons.check_circle),
+                      label: const Text(
+                        'Save Form Data',
+                        style: TextStyle(fontSize: 16),
                       ),
-                      _buildTextField('O2 Device', _o2DeviceCtrl),
-                      _buildTextField('Bronchial Hygiene', _bronchialHygieneCtrl),
-                      _buildTextField('O2 Sat %', _o2SatCtrl, keyboardType: TextInputType.number),
-                      _buildTextField('ABG', _abgCtrl),
-                      _buildTextField('Incentive Spirometer', _incentiveSpirometerCtrl),
-                      _buildTextField('MDI Inhaler', _mdiInhalerCtrl),
-                      _buildTextField('Breath Sounds', _breathSoundsCtrl),
-                      _buildTextField('Cough', _coughCtrl),
-                      _buildTextField('Chest Tube', _chestTubeCtrl),
-                    ],
+                      style: ElevatedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
-              const SizedBox(height: 16),
-
-              // 4. Cardio
-              Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text('Cardiovascular System', style: Theme.of(context).textTheme.titleLarge),
-                      const Divider(),
-                      _buildTextField('Pulse Series', _pulseSeriesCtrl, hint: 'Comma separated ints (e.g. 78, 82, 80)'),
-                      _buildTextField('Pulse Rate', _pulseRateCtrl, keyboardType: TextInputType.number),
-                      _buildTextField('Pulse Rhythm', _pulseRhythmCtrl),
-                      _buildTextField('Pulse Amplitude', _pulseAmplitudeCtrl),
-                      _buildTextField('Heart Sounds', _heartSoundsCtrl),
-                      _buildTextField('BP Series', _bpSeriesCtrl),
-                      _buildTextField('MAP', _mapCtrl),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 32),
-              
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton.icon(
-                  onPressed: _submit,
-                  icon: _isLoading ? const CircularProgressIndicator(color: Colors.white) : const Icon(Icons.check_circle),
-                  label: const Text('Save Form Data', style: TextStyle(fontSize: 16)),
-                  style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  ),
-                ),
-              )
-            ],
-          ),
             ),
           ),
         ),

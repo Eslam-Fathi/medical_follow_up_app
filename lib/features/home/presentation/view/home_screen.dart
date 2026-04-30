@@ -27,6 +27,13 @@ import 'widgets/doctor_appointments_section.dart';
 import 'widgets/recent_chats_section.dart';
 import 'widgets/doctor_home_content.dart';
 
+/// Main home screen for follow-up.
+///
+/// Responsibilities:
+/// - Fetch profile & appointments
+/// - Adapt layout for mobile vs desktop
+/// - Handle navigation between tabs (home, checks, chatbot, profile)
+/// - Schedule OS-level appointment reminders via [NotificationService].
 class HomeFollowUpScreen extends ConsumerStatefulWidget {
   const HomeFollowUpScreen({super.key});
 
@@ -37,8 +44,11 @@ class HomeFollowUpScreen extends ConsumerStatefulWidget {
 class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen>
     with SingleTickerProviderStateMixin {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   late AnimationController _controller;
   int _selectedBottomIndex = 0;
+
+  /// Filters for the appointments list on the home tab.
   final List<String> _filters = const [
     'All',
     'Upcoming',
@@ -49,6 +59,7 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen>
   @override
   void initState() {
     super.initState();
+    // One-time entrance animation for the home content.
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1000),
@@ -62,16 +73,20 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen>
     super.dispose();
   }
 
+  /// Pull-to-refresh handler.
+  ///
+  /// Refreshes profile and appointments in parallel.
   Future<void> _onRefresh() async {
-    // Refresh the core providers that drive the home screen
     await ref.refresh(profileProvider.future);
     await ref.refresh(appointmentsProvider.future);
-    // nextAppointmentProvider will follow automatically as it watches appointmentsProvider
+    // nextAppointmentProvider will recalculate from appointmentsProvider.
   }
 
+  /// Staggered fade + slide animation for child widgets.
   Widget _animate(Widget child, int index) {
     final start = 0.1 * index;
     final end = start + 0.6;
+
     return FadeTransition(
       opacity: CurvedAnimation(
         parent: _controller,
@@ -100,7 +115,7 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen>
 
   @override
   Widget build(BuildContext context) {
-    // Listen for profile errors → show SnackBar
+    // Listen for profile errors and show a SnackBar.
     ref.listen(profileProvider, (previous, next) {
       next.whenOrNull(
         error: (err, _) {
@@ -111,7 +126,7 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen>
       );
     });
 
-    // Listen for appointments errors → show SnackBar
+    // Listen for appointments errors and show a SnackBar.
     ref.listen(appointmentsProvider, (previous, next) {
       next.whenOrNull(
         error: (err, _) {
@@ -122,7 +137,7 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen>
       );
     });
 
-    // Listen for upcoming reminders (next 7 days) → schedule hardware alarms
+    // Listen for upcoming reminders (next 7 days) and schedule hardware alarms.
     ref.listen(upcomingRemindersProvider, (previous, next) {
       next.whenData((reminders) {
         NotificationService().scheduleAppointmentReminders(reminders);
@@ -131,11 +146,12 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen>
 
     final profileAsync = ref.watch(profileProvider);
 
+    // Handle profile loading/error states.
     return profileAsync.when(
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (err, _) {
-        // If we are logging out, don't show the error, just show loading
+        // If the user is being logged out, avoid flashing an error.
         final auth = ref.read(authNotifierProvider);
         if (auth.loginResponse == null) {
           return const Scaffold(
@@ -155,10 +171,11 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen>
         final isMobile = Responsive.isMobile(context);
 
         return PopScope(
-          canPop: false,
+          canPop: false, // Prevents back navigation from home.
           child: Scaffold(
             key: _scaffoldKey,
             backgroundColor: colorScheme.background,
+            // On mobile, the care team is accessed via an end drawer.
             endDrawer: isMobile
                 ? SizedBox(
                     width: MediaQuery.of(context).size.width * 0.8,
@@ -167,7 +184,7 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen>
                         child: Padding(
                           padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
                           child: CareTeamSection(
-                            profile: profile, // <-- pass here (mobile)
+                            profile: profile, // mobile care team panel
                           ),
                         ),
                       ),
@@ -188,6 +205,10 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen>
     );
   }
 
+  // ---------------- MOBILE LAYOUT ----------------
+
+  /// Builds the mobile/tab layout, switching content based on
+  /// the currently selected bottom navigation tab.
   Widget _buildMobileLayout(
     BuildContext context,
     UserDto user,
@@ -201,6 +222,7 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen>
       return const ChatBotScreen();
     }
     if (_selectedBottomIndex == 3) {
+      // Profile tab.
       return Scaffold(
         appBar: AppBar(
           title: const Text('Profile'),
@@ -219,6 +241,7 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen>
 
     final bool isDoctor = user.role.toUpperCase() == 'DOCTOR';
 
+    // Home tab (index 0).
     return RefreshIndicator(
       onRefresh: _onRefresh,
       child: ResponsiveWrapper(
@@ -228,6 +251,7 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Header: greeting, role, care team button.
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: _animate(
@@ -290,6 +314,12 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen>
     );
   }
 
+  // ---------------- DESKTOP LAYOUT ----------------
+
+  /// Desktop layout:
+  /// - Left: sidebar (navigation + logout).
+  /// - Center: main content (home/checks/chatbot/profile).
+  /// - Right: care team panel.
   Widget _buildDesktopLayout(
     BuildContext context,
     UserDto user,
@@ -319,6 +349,7 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen>
             ).pushNamedAndRemoveUntil('/auth', (route) => false);
           },
         ),
+        // Center content.
         Expanded(
           flex: 7,
           child: isChecksTab
@@ -368,7 +399,8 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen>
                                 filters: _filters,
                                 selectedIndex: ref.watch(homeFilterProvider),
                                 onFilterSelected: (index) {
-                                  ref.read(homeFilterProvider.notifier).state = index;
+                                  ref.read(homeFilterProvider.notifier).state =
+                                      index;
                                 },
                               ),
                               2,
@@ -397,8 +429,7 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen>
                   ),
                 ),
         ),
-
-        // RIGHT: care team
+        // Right: care team sidebar.
         Expanded(
           flex: 3,
           child: Container(
@@ -407,7 +438,7 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen>
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
                 child: CareTeamSection(
-                  profile: profile, // <-- pass here (desktop)
+                  profile: profile, // desktop care team column
                 ),
               ),
             ),
@@ -417,6 +448,9 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen>
     );
   }
 
+  // ---------------- CHECKS TAB (APPOINTMENTS) ----------------
+
+  /// Shared "Checks / Appointments" tab used on both mobile and desktop.
   Widget _buildChecksTab(UserDto user) {
     final asyncAppointments = ref.watch(appointmentsProvider);
     final isDoctor = user.role.toUpperCase() == 'DOCTOR';
@@ -424,7 +458,7 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text('Appointments'),
-        automaticallyImplyLeading: false, // Don't show back button if nested
+        automaticallyImplyLeading: false, // No back button when nested in home.
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -455,6 +489,7 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen>
         error: (err, _) => Center(child: Text(err.toString())),
         data: (appointments) {
           if (appointments.isEmpty) {
+            // Empty-state UX when there are no appointments yet.
             return RefreshIndicator(
               onRefresh: () async => ref.invalidate(appointmentsProvider),
               child: ResponsiveWrapper(
@@ -481,6 +516,7 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen>
             );
           }
 
+          // Non-empty appointments list.
           return RefreshIndicator(
             onRefresh: () async => ref.invalidate(appointmentsProvider),
             child: ResponsiveWrapper(
@@ -503,6 +539,10 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen>
     );
   }
 
+  // ---------------- BOTTOM NAV (MOBILE) ----------------
+
+  /// Bottom navigation for mobile / tablet:
+  /// 0 = Home, 1 = Checks, 2 = Chatbot, 3 = Profile.
   Widget _buildBottomNavigationBar(BuildContext context) {
     return BottomNavigationBar(
       currentIndex: _selectedBottomIndex,

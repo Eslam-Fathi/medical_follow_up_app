@@ -4,9 +4,15 @@ import 'package:medical_follow_up_app/core/theme/app_icons.dart';
 import 'package:medical_follow_up_app/core/utils/colors.dart';
 import 'package:medical_follow_up_app/features/appointments/presentation/manager/providers/appointments_provider.dart';
 
+/// Card showing the user's next scheduled follow-up (if any).
+///
+/// Uses [nextAppointmentProvider] and handles:
+/// - loading / error / no-appointment fallbacks
+/// - friendly date labels ("Today", "Tomorrow", "5 May").
 class NextFollowUpCard extends ConsumerWidget {
   const NextFollowUpCard({super.key});
 
+  /// Formats a time as 12‑hour with AM/PM (e.g. "2:30 PM").
   String _formatTime(DateTime date) {
     final h = date.hour;
     final m = date.minute.toString().padLeft(2, '0');
@@ -15,6 +21,10 @@ class NextFollowUpCard extends ConsumerWidget {
     return '$hr12:$m $period';
   }
 
+  /// Returns a short label for the date:
+  /// - "Today"
+  /// - "Tomorrow"
+  /// - "5 May" for others.
   String _formatDateLabel(DateTime date) {
     final now = DateTime.now();
     final dateDay = DateTime(date.year, date.month, date.day);
@@ -23,8 +33,21 @@ class NextFollowUpCard extends ConsumerWidget {
 
     if (diff == 0) return 'Today';
     if (diff == 1) return 'Tomorrow';
-    
-    final months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    final months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     return '${date.day} ${months[date.month - 1]}';
   }
 
@@ -33,8 +56,13 @@ class NextFollowUpCard extends ConsumerWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
+    // AsyncValue<Appointment?> giving the next upcoming appointment.
     final nextAppointmentAsync = ref.watch(nextAppointmentProvider);
 
+    /// Small helper to build a consistent “soft card” for:
+    /// - loading
+    /// - error
+    /// - no upcoming appointment.
     Widget buildFallbackCard({
       required String title,
       required String subtitle,
@@ -83,12 +111,11 @@ class NextFollowUpCard extends ConsumerWidget {
       );
     }
 
+    // Reusable decorative trailing icon used on success / no-data states.
     final trailingIcon = Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isDark
-            ? HealthCareColors.darkSurface
-            : Colors.white,
+        color: isDark ? HealthCareColors.darkSurface : Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -102,6 +129,7 @@ class NextFollowUpCard extends ConsumerWidget {
     );
 
     return nextAppointmentAsync.when(
+      // Show a skeleton-style card with a loader.
       loading: () => buildFallbackCard(
         title: 'Next follow-up',
         subtitle: 'Retrieving your medical schedule...',
@@ -111,11 +139,13 @@ class NextFollowUpCard extends ConsumerWidget {
           child: CircularProgressIndicator(strokeWidth: 2),
         ),
       ),
+      // Show error message from provider.
       error: (err, _) => buildFallbackCard(
         title: 'Next follow-up',
         subtitle: err.toString().replaceAll('Exception: ', ''),
       ),
       data: (appointment) {
+        // No upcoming appointments.
         if (appointment == null) {
           return buildFallbackCard(
             title: 'Next follow-up',
@@ -124,6 +154,7 @@ class NextFollowUpCard extends ConsumerWidget {
           );
         }
 
+        // There is an upcoming appointment.
         final nextAppointment = appointment;
         final timeString = _formatTime(nextAppointment.date);
         final dateLabel = _formatDateLabel(nextAppointment.date);
@@ -134,7 +165,9 @@ class NextFollowUpCard extends ConsumerWidget {
                 ? HealthCareColors.darkCardBackground
                 : HealthCareColors.primaryLighter.withOpacity(0.2),
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: HealthCareColors.primary.withOpacity(0.05)),
+            border: Border.all(
+              color: HealthCareColors.primary.withOpacity(0.05),
+            ),
           ),
           clipBehavior: Clip.antiAlias,
           child: Stack(
@@ -143,6 +176,7 @@ class NextFollowUpCard extends ConsumerWidget {
                 padding: const EdgeInsets.all(20),
                 child: Row(
                   children: [
+                    // Main text content.
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -158,8 +192,12 @@ class NextFollowUpCard extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(height: 12),
+                          // Date/time pill.
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
                             decoration: BoxDecoration(
                               color: HealthCareColors.primary.withOpacity(0.05),
                               borderRadius: BorderRadius.circular(12),
@@ -167,7 +205,11 @@ class NextFollowUpCard extends ConsumerWidget {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(AppIcons.calendar, size: 14, color: HealthCareColors.primary),
+                                Icon(
+                                  AppIcons.calendar,
+                                  size: 14,
+                                  color: HealthCareColors.primary,
+                                ),
                                 const SizedBox(width: 8),
                                 Text(
                                   '$dateLabel • $timeString',
@@ -180,9 +222,10 @@ class NextFollowUpCard extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(height: 16),
+                          // CTA button to go to appointment details (hook to be implemented).
                           ElevatedButton(
                             onPressed: () {
-                              // Action for view details
+                              // TODO: navigate to appointment details screen.
                             },
                             style: ElevatedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(
@@ -204,15 +247,18 @@ class NextFollowUpCard extends ConsumerWidget {
                   ],
                 ),
               ),
-              Positioned(
+              // Small red dot indicator (e.g. "new" or "unseen").
+              const Positioned(
                 top: 12,
                 right: 12,
-                child: Container(
+                child: SizedBox(
                   width: 8,
                   height: 8,
-                  decoration: const BoxDecoration(
-                    color: Colors.redAccent,
-                    shape: BoxShape.circle,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: Colors.redAccent,
+                      shape: BoxShape.circle,
+                    ),
                   ),
                 ),
               ),

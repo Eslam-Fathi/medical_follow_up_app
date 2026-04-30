@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:medical_follow_up_app/features/auth/data/models/login/login_response.dart';
 import 'package:medical_follow_up_app/features/profile/presentation/view/widgets/profile_general_medical_card.dart';
 
-
-
 import 'profile_header.dart';
 import 'profile_account_card.dart';
 import 'profile_patient_details_card.dart';
@@ -12,7 +10,11 @@ import 'profile_settings_card.dart';
 
 import 'package:medical_follow_up_app/features/medical_record/presentation/view/medical_record_screen.dart';
 
-/// Desktop layout: two columns (left basic info, right details/settings).
+/// Desktop / large-screen profile layout.
+///
+/// Uses a two-column card:
+/// - LEFT: avatar + header + account basics
+/// - RIGHT: patient/doctor details + settings & logout
 class ProfileDesktopLayout extends StatelessWidget {
   final UserDto user;
   final Map<String, dynamic>? patient;
@@ -34,6 +36,7 @@ class ProfileDesktopLayout extends StatelessWidget {
 
     return Center(
       child: ConstrainedBox(
+        // Prevent content from becoming too wide on ultra-wide screens.
         constraints: const BoxConstraints(maxWidth: 1100),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
@@ -49,7 +52,7 @@ class ProfileDesktopLayout extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // LEFT: avatar + title + account info
+                  // LEFT COLUMN: profile header + core account information.
                   Expanded(
                     flex: 3,
                     child: Column(
@@ -57,7 +60,7 @@ class ProfileDesktopLayout extends StatelessWidget {
                         ProfileHeader(
                           user: user,
                           isDoctor: isDoctor,
-                          large: true,
+                          large: true, // bigger header on desktop.
                         ),
                         const SizedBox(height: 16),
                         Card(
@@ -78,23 +81,29 @@ class ProfileDesktopLayout extends StatelessWidget {
                   ),
 
                   const SizedBox(width: 24),
-                  
-                  // RIGHT: details + settings
+
+                  // RIGHT COLUMN: medical details and settings.
                   Expanded(
                     flex: 5,
                     child: Column(
                       children: [
+                        // Patient-specific cards: medical record & history.
                         if (!isDoctor && patient != null) ...[
+                          // CTA card to open full medical record screen.
                           Card(
                             elevation: 4,
-                            color: colorScheme.primaryContainer.withOpacity(0.4),
+                            color: colorScheme.primaryContainer.withOpacity(
+                              0.4,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(18),
                             ),
                             child: ListTile(
                               leading: const Icon(Icons.medical_information),
                               title: const Text('View Full Medical Record'),
-                              subtitle: const Text('Access your health metrics and detailed history'),
+                              subtitle: const Text(
+                                'Access your health metrics and detailed history',
+                              ),
                               trailing: const Icon(Icons.chevron_right),
                               onTap: () {
                                 Navigator.push(
@@ -110,15 +119,22 @@ class ProfileDesktopLayout extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 16),
+
+                          // Compact stats row (age, gender, blood type, ID).
                           ProfileGeneralMedicalCard(patient: patient!),
                           const SizedBox(height: 16),
+
+                          // Collapsible chronic diseases / allergies / notes.
                           ProfilePatientDetailsCard(patient: patient!),
                         ],
-                        
+
+                        // Doctor-specific professional details card.
                         if (isDoctor && doctor != null)
                           ProfileDoctorDetailsCard(doctor: doctor!),
 
                         const SizedBox(height: 16),
+
+                        // Settings: theme toggle, logout, etc.
                         Card(
                           elevation: 3,
                           shape: RoundedRectangleBorder(

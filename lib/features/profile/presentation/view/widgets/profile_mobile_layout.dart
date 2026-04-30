@@ -13,7 +13,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:medical_follow_up_app/features/auth/presentation/manager/state/auth_notifier.dart';
 import 'package:medical_follow_up_app/features/medical_record/presentation/view/medical_record_screen.dart';
 
-/// Mobile/tablet profile layout with entrance animations and premium redesign.
+/// Mobile / tablet profile layout.
+///
+/// This is the main profile screen used on small screens. It:
+/// - shows user header + account info
+/// - shows patient or doctor specific sections
+/// - provides quick access to full medical records (for patients)
+/// - includes a settings / logout section
+/// all with simple entrance animations.
 class ProfileMobileLayout extends ConsumerStatefulWidget {
   final UserDto user;
   final Map<String, dynamic>? patient;
@@ -31,10 +38,13 @@ class ProfileMobileLayout extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<ProfileMobileLayout> createState() => _ProfileMobileLayoutState();
+  ConsumerState<ProfileMobileLayout> createState() =>
+      _ProfileMobileLayoutState();
 }
 
-class _ProfileMobileLayoutState extends ConsumerState<ProfileMobileLayout> with SingleTickerProviderStateMixin {
+class _ProfileMobileLayoutState extends ConsumerState<ProfileMobileLayout>
+    with SingleTickerProviderStateMixin {
+  /// Controls the global fade/slide‑in animations for sections.
   late AnimationController _controller;
 
   @override
@@ -53,22 +63,35 @@ class _ProfileMobileLayoutState extends ConsumerState<ProfileMobileLayout> with 
     super.dispose();
   }
 
+  /// Wraps a child in a staggered fade + slide animation.
+  ///
+  /// The [index] determines when the item starts animating,
+  /// creating a cascading effect from top to bottom.
   Widget _animate(Widget child, int index) {
     final start = 0.1 * index;
     final end = start + 0.5;
+
     return FadeTransition(
       opacity: CurvedAnimation(
         parent: _controller,
-        curve: Interval(start.clamp(0, 1), end.clamp(0, 1), curve: Curves.easeIn),
+        curve: Interval(
+          start.clamp(0, 1),
+          end.clamp(0, 1),
+          curve: Curves.easeIn,
+        ),
       ),
       child: SlideTransition(
-        position: Tween<Offset>(
-          begin: const Offset(0, 0.1),
-          end: Offset.zero,
-        ).animate(CurvedAnimation(
-          parent: _controller,
-          curve: Interval(start.clamp(0, 1), end.clamp(0, 1), curve: Curves.easeOut),
-        )),
+        position: Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero)
+            .animate(
+              CurvedAnimation(
+                parent: _controller,
+                curve: Interval(
+                  start.clamp(0, 1),
+                  end.clamp(0, 1),
+                  curve: Curves.easeOut,
+                ),
+              ),
+            ),
         child: child,
       ),
     );
@@ -85,10 +108,14 @@ class _ProfileMobileLayoutState extends ConsumerState<ProfileMobileLayout> with 
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _animate(ProfileHeader(user: widget.user, isDoctor: widget.isDoctor), 0),
+          // Top profile header (avatar, name, role badge, etc.).
+          _animate(
+            ProfileHeader(user: widget.user, isDoctor: widget.isDoctor),
+            0,
+          ),
           const SizedBox(height: 24),
 
-          // Account & Common Info
+          // Account & common info (name, email, role, basic demographics).
           _animate(
             Card(
               elevation: 0,
@@ -99,15 +126,19 @@ class _ProfileMobileLayoutState extends ConsumerState<ProfileMobileLayout> with 
               ),
               child: Padding(
                 padding: const EdgeInsets.all(4),
-                child: ProfileAccountCard(user: widget.user, patient: widget.patient),
+                child: ProfileAccountCard(
+                  user: widget.user,
+                  patient: widget.patient,
+                ),
               ),
             ),
             1,
           ),
           const SizedBox(height: 16),
 
-          // Medical Record Access (Patient Only)
+          // --- Patient‑specific content (if the logged‑in user is a patient) ---
           if (!widget.isDoctor && widget.patient != null) ...[
+            // Button‑like card to open the full medical record screen.
             _animate(
               Container(
                 decoration: BoxDecoration(
@@ -135,34 +166,50 @@ class _ProfileMobileLayoutState extends ConsumerState<ProfileMobileLayout> with 
                       );
                     },
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 18,
+                      ),
                       child: Row(
                         children: [
+                          // Icon bubble.
                           Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
                               color: theme.cardColor.withOpacity(0.5),
                               shape: BoxShape.circle,
                             ),
-                            child: Icon(Icons.medical_information_rounded, color: colorScheme.primary),
+                            child: Icon(
+                              Icons.medical_information_rounded,
+                              color: colorScheme.primary,
+                            ),
                           ),
                           const SizedBox(width: 16),
+                          // Title + subtitle.
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   'Full Medical Record',
-                                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                                 Text(
                                   'Health history and clinical data',
-                                  style: theme.textTheme.bodySmall?.copyWith(color: theme.hintColor),
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.hintColor,
+                                  ),
                                 ),
                               ],
                             ),
                           ),
-                          Icon(Icons.arrow_forward_ios_rounded, size: 16, color: colorScheme.primary),
+                          Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            size: 16,
+                            color: colorScheme.primary,
+                          ),
                         ],
                       ),
                     ),
@@ -172,22 +219,31 @@ class _ProfileMobileLayoutState extends ConsumerState<ProfileMobileLayout> with 
               2,
             ),
             const SizedBox(height: 16),
+
+            // Compact general medical info card (age, blood type, etc.).
             _animate(ProfileGeneralMedicalCard(patient: widget.patient!), 3),
             const SizedBox(height: 16),
+
+            // Collapsible card for chronic diseases, allergies, clinical notes.
             _animate(ProfilePatientDetailsCard(patient: widget.patient!), 4),
-          ] else if (widget.isDoctor && widget.doctor != null) ...[
+          ]
+          // --- Doctor‑specific content (if the logged‑in user is a doctor) ---
+          else if (widget.isDoctor && widget.doctor != null) ...[
             _animate(ProfileDoctorDetailsCard(doctor: widget.doctor!), 2),
           ],
 
           const SizedBox(height: 16),
 
-          // Settings Section
+          // Settings section: theme toggle, logout, etc.
           _animate(
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 8,
+                  ),
                   child: Text(
                     'Preferences & Account',
                     style: theme.textTheme.titleSmall?.copyWith(

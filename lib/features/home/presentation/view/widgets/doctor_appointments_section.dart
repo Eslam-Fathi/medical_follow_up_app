@@ -6,6 +6,12 @@ import 'package:medical_follow_up_app/features/appointments/presentation/manager
 import 'package:medical_follow_up_app/features/appointments/data/models/appointment_model.dart';
 import 'appointment_card.dart';
 
+/// Compact "My Appointments" section for doctors.
+///
+/// Shows:
+/// - Title + "See all" action
+/// - A horizontal list of upcoming (pending/confirmed) appointments
+///   or an empty/loader/error state.
 class DoctorAppointmentsSection extends ConsumerWidget {
   final VoidCallback onSeeAll;
 
@@ -14,11 +20,13 @@ class DoctorAppointmentsSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    // All appointments where the current user is the doctor.
     final appointmentsAsync = ref.watch(doctorAppointmentsProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Header row: "My Appointments" + "See all" link.
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -28,18 +36,18 @@ class DoctorAppointmentsSection extends ConsumerWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            TextButton(
-              onPressed: onSeeAll,
-              child: const Text('See all'),
-            ),
+            TextButton(onPressed: onSeeAll, child: const Text('See all')),
           ],
         ),
         const SizedBox(height: 12),
+
         appointmentsAsync.when(
+          // Loading placeholder with fixed height to avoid layout jump.
           loading: () => const SizedBox(
             height: 140,
             child: Center(child: CircularProgressIndicator()),
           ),
+          // Error state with a soft red background.
           error: (err, _) => Container(
             height: 140,
             width: double.infinity,
@@ -47,19 +55,20 @@ class DoctorAppointmentsSection extends ConsumerWidget {
               color: Colors.red.withOpacity(0.05),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Center(
-              child: Text('Failed to load appointments'),
-            ),
+            child: const Center(child: Text('Failed to load appointments')),
           ),
           data: (appointments) {
+            // Keep only upcoming bookings: PENDING or CONFIRMED.
             final upcoming = appointments.where((app) {
               final status = app.status.toUpperCase();
               return status == 'PENDING' || status == 'CONFIRMED';
             }).toList();
 
+            // Sort chronologically by date.
             upcoming.sort((a, b) => a.date.compareTo(b.date));
 
             if (upcoming.isEmpty) {
+              // Empty-state card when there are no upcoming appointments.
               return Container(
                 height: 100,
                 width: double.infinity,
@@ -75,6 +84,7 @@ class DoctorAppointmentsSection extends ConsumerWidget {
               );
             }
 
+            // Horizontal list of upcoming appointments.
             return SizedBox(
               height: 140,
               child: ListView.builder(

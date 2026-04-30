@@ -2,10 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:medical_follow_up_app/features/auth/data/models/login/login_response.dart';
 import 'package:medical_follow_up_app/core/utils/colors.dart';
 
-/// Redesigned Header: Banner with custom medical pattern + Avatar + Name.
+/// Profile header used on the profile screen.
+///
+/// Shows:
+/// - a medical‑themed banner background
+/// - the user's avatar (initials)
+/// - the user's name
+/// - a role badge (doctor vs patient)
 class ProfileHeader extends StatefulWidget {
   final UserDto user;
   final bool isDoctor;
+
+  /// When [large] is true, the header/avatars are rendered bigger
+  /// (used on tablet / desktop layouts).
   final bool large;
 
   const ProfileHeader({
@@ -19,7 +28,8 @@ class ProfileHeader extends StatefulWidget {
   State<ProfileHeader> createState() => _ProfileHeaderState();
 }
 
-class _ProfileHeaderState extends State<ProfileHeader> with SingleTickerProviderStateMixin {
+class _ProfileHeaderState extends State<ProfileHeader>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -27,16 +37,22 @@ class _ProfileHeaderState extends State<ProfileHeader> with SingleTickerProvider
   @override
   void initState() {
     super.initState();
+
+    // Single animation controller used for both fade and slide effects.
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
+
+    // Simple ease‑in fade for avatar + texts.
     _fadeAnimation = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
+
+    // Slight "pop‑up" effect from below for name / role.
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.2),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
-    
+
     _controller.forward();
   }
 
@@ -50,15 +66,17 @@ class _ProfileHeaderState extends State<ProfileHeader> with SingleTickerProvider
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+
+    // Avatar scales with layout size.
     final avatarRadius = widget.large ? 54.0 : 44.0;
-    
+
     return Column(
       children: [
         Stack(
           clipBehavior: Clip.none,
           alignment: Alignment.center,
           children: [
-            // Banner Backdrop
+            // Gradient banner with a custom "medical heartbeat" pattern.
             Container(
               height: widget.large ? 160 : 120,
               width: double.infinity,
@@ -82,8 +100,8 @@ class _ProfileHeaderState extends State<ProfileHeader> with SingleTickerProvider
                 ),
               ),
             ),
-            
-            // Avatar
+
+            // Centered avatar, visually overlapping the bottom of the banner.
             Positioned(
               bottom: -avatarRadius,
               child: FadeTransition(
@@ -93,7 +111,11 @@ class _ProfileHeaderState extends State<ProfileHeader> with SingleTickerProvider
                   child: Container(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: theme.scaffoldBackgroundColor, width: 4),
+                      // White border to separate avatar from the banner.
+                      border: Border.all(
+                        color: theme.scaffoldBackgroundColor,
+                        width: 4,
+                      ),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withOpacity(0.1),
@@ -105,6 +127,7 @@ class _ProfileHeaderState extends State<ProfileHeader> with SingleTickerProvider
                     child: CircleAvatar(
                       radius: avatarRadius,
                       backgroundColor: HealthCareColors.primaryLighter,
+                      // Fallback to initials from the user's name.
                       child: Text(
                         _initials(widget.user.name),
                         style: theme.textTheme.headlineMedium?.copyWith(
@@ -119,10 +142,11 @@ class _ProfileHeaderState extends State<ProfileHeader> with SingleTickerProvider
             ),
           ],
         ),
-        
+
+        // Spacer to account for the overlapping avatar height.
         SizedBox(height: avatarRadius + 12),
-        
-        // Name and Role
+
+        // Name + Role badge with slide/fade entrance.
         SlideTransition(
           position: _slideAnimation,
           child: FadeTransition(
@@ -138,9 +162,12 @@ class _ProfileHeaderState extends State<ProfileHeader> with SingleTickerProvider
                 ),
                 const SizedBox(height: 4),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
-                    color: widget.isDoctor 
+                    color: widget.isDoctor
                         ? colorScheme.primary.withOpacity(0.1)
                         : colorScheme.secondary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
@@ -148,7 +175,9 @@ class _ProfileHeaderState extends State<ProfileHeader> with SingleTickerProvider
                   child: Text(
                     widget.isDoctor ? 'Healthcare Professional' : 'Patient',
                     style: theme.textTheme.labelMedium?.copyWith(
-                      color: widget.isDoctor ? colorScheme.primary : colorScheme.secondary,
+                      color: widget.isDoctor
+                          ? colorScheme.primary
+                          : colorScheme.secondary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -161,14 +190,21 @@ class _ProfileHeaderState extends State<ProfileHeader> with SingleTickerProvider
     );
   }
 
+  /// Derives initials from the full name, used when there is no avatar image.
+  ///
+  /// - "Ahmed" -> "A"
+  /// - "Ahmed Youssef" -> "AY"
   String _initials(String name) {
     final parts = name.trim().split(' ');
-    if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
+    if (parts.length == 1) {
+      return parts.first.substring(0, 1).toUpperCase();
+    }
     return (parts[0][0] + parts[1][0]).toUpperCase();
   }
 }
 
-/// Custom painter for medical-themed background pattern.
+/// Custom painter that draws a subtle medical‑themed pattern
+/// (heartbeat‑like lines + crosses) on the banner background.
 class MedicalPatternPainter extends CustomPainter {
   final Color color;
 
@@ -182,8 +218,8 @@ class MedicalPatternPainter extends CustomPainter {
       ..style = PaintingStyle.stroke;
 
     final path = Path();
-    
-    // Draw subtle heartbeat/cross lines
+
+    // Draw a repeating "heartbeat" line across the banner width.
     double x = 0;
     while (x < size.width) {
       path.moveTo(x, size.height * 0.7);
@@ -194,15 +230,15 @@ class MedicalPatternPainter extends CustomPainter {
       path.lineTo(x + 60, size.height * 0.7);
       x += 80;
     }
-    
+
     canvas.drawPath(path, paint);
 
-    // Some decorative crosses
+    // Add small decorative crosses at various positions.
     for (int i = 0; i < 5; i++) {
-        double px = (i * 70.0 + 30) % size.width;
-        double py = (i * 40.0 + 20) % size.height;
-        canvas.drawLine(Offset(px - 5, py), Offset(px + 5, py), paint);
-        canvas.drawLine(Offset(px, py - 5), Offset(px, py + 5), paint);
+      final px = (i * 70.0 + 30) % size.width;
+      final py = (i * 40.0 + 20) % size.height;
+      canvas.drawLine(Offset(px - 5, py), Offset(px + 5, py), paint);
+      canvas.drawLine(Offset(px, py - 5), Offset(px, py + 5), paint);
     }
   }
 

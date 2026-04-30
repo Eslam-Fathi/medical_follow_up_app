@@ -1,17 +1,32 @@
-enum NotificationType {
-  appointment,
-  message,
-  reminder,
-  system,
-}
+/// Types of notifications supported by the app.
+///
+/// Used to drive UI (icons/colors) and behavior (e.g. navigation target).
+enum NotificationType { appointment, message, reminder, system }
 
+/// Simple model for an in-app notification.
+///
+/// Can be created locally or deserialized from JSON.
 class AppNotification {
+  /// Unique identifier (could be backend ID or local UUID).
   final String id;
+
+  /// Short title shown in bold (first line).
   final String title;
+
+  /// Main message body (short description).
   final String message;
+
+  /// When the notification was created/received.
   final DateTime timestamp;
+
+  /// Whether the user has already opened/acknowledged it.
   final bool isRead;
+
+  /// High-level type used to pick icons/colors and actions.
   final NotificationType type;
+
+  /// Optional ID that links this notification to another entity
+  /// (e.g. appointmentId, messageId, recordId, etc.).
   final String? relatedId;
 
   AppNotification({
@@ -24,6 +39,9 @@ class AppNotification {
     this.relatedId,
   });
 
+  /// Returns a copy with some fields changed.
+  ///
+  /// Useful for immutable updates in StateNotifier/Provider.
   AppNotification copyWith({
     String? id,
     String? title,
@@ -44,6 +62,7 @@ class AppNotification {
     );
   }
 
+  /// Parses an [AppNotification] from JSON (e.g. backend response).
   factory AppNotification.fromJson(Map<String, dynamic> json) {
     return AppNotification(
       id: json['id'] as String,
@@ -59,6 +78,7 @@ class AppNotification {
     );
   }
 
+  /// Serializes this notification to JSON (for APIs / local storage).
   Map<String, dynamic> toJson() {
     return {
       'id': id,

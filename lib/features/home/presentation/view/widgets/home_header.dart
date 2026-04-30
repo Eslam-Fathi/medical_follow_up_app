@@ -6,6 +6,12 @@ import 'package:medical_follow_up_app/core/utils/responsive.dart';
 import 'package:medical_follow_up_app/features/notifications/presentation/manager/notifications_provider.dart';
 import 'package:medical_follow_up_app/features/notifications/presentation/view/widgets/notification_bubble.dart';
 
+/// Home header shown at the top of the dashboard.
+///
+/// Responsibilities:
+/// - Show greeting + user name/role
+/// - Optional care team button (mobile)
+/// - Notification bell with unread badge and overlay bubble.
 class HomeHeader extends ConsumerWidget {
   final VoidCallback? onCareTeamPressed;
   final String userName;
@@ -18,6 +24,7 @@ class HomeHeader extends ConsumerWidget {
     required this.userRole,
   });
 
+  /// Returns a time‑of‑day greeting based on the current hour.
   String _getGreeting() {
     final hour = DateTime.now().hour;
     if (hour < 12) return 'Good Morning';
@@ -25,6 +32,9 @@ class HomeHeader extends ConsumerWidget {
     return 'Good Evening';
   }
 
+  /// Shows the notifications bubble as a full‑screen [OverlayEntry].
+  ///
+  /// Tapping outside the bubble dismisses the overlay.
   void _showNotificationOverlay(BuildContext context) {
     final overlay = Overlay.of(context);
     late OverlayEntry entry;
@@ -35,9 +45,9 @@ class HomeHeader extends ConsumerWidget {
         onTap: () => entry.remove(),
         child: Stack(
           children: [
-            Positioned.fill(
-              child: Container(color: Colors.transparent),
-            ),
+            // Transparent full-screen area to capture taps outside.
+            Positioned.fill(child: Container(color: Colors.transparent)),
+            // Bubble aligned to the top-right of the screen.
             Positioned(
               top: 0,
               right: 0,
@@ -68,19 +78,25 @@ class HomeHeader extends ConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          // LEFT: avatar + greeting + name/role.
           Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(2),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: HealthCareColors.primary.withOpacity(0.2), width: 2),
+                  border: Border.all(
+                    color: HealthCareColors.primary.withOpacity(0.2),
+                    width: 2,
+                  ),
                 ),
                 child: CircleAvatar(
                   radius: 24,
                   backgroundColor: HealthCareColors.primary.withOpacity(0.1),
                   child: Icon(
-                    userRole.toUpperCase() == 'DOCTOR' ? Icons.medical_services : Icons.person,
+                    userRole.toUpperCase() == 'DOCTOR'
+                        ? Icons.medical_services
+                        : Icons.person,
                     color: HealthCareColors.primary,
                     size: 24,
                   ),
@@ -98,7 +114,9 @@ class HomeHeader extends ConsumerWidget {
                     ),
                   ),
                   Text(
-                    userRole.toUpperCase() == 'DOCTOR' ? 'Dr. $userName' : userName,
+                    userRole.toUpperCase() == 'DOCTOR'
+                        ? 'Dr. $userName'
+                        : userName,
                     style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                       letterSpacing: -0.5,
@@ -108,6 +126,7 @@ class HomeHeader extends ConsumerWidget {
               ),
             ],
           ),
+          // RIGHT: care team (mobile only) + notifications.
           Row(
             children: [
               if (!isDeskTop)
@@ -118,12 +137,19 @@ class HomeHeader extends ConsumerWidget {
                     decoration: BoxDecoration(
                       color: colorScheme.surface,
                       shape: BoxShape.circle,
-                      border: Border.all(color: colorScheme.outline.withOpacity(0.1)),
+                      border: Border.all(
+                        color: colorScheme.outline.withOpacity(0.1),
+                      ),
                     ),
-                    child: Icon(AppIcons.heart, size: 20, color: HealthCareColors.primary),
+                    child: Icon(
+                      AppIcons.heart,
+                      size: 20,
+                      color: HealthCareColors.primary,
+                    ),
                   ),
                   tooltip: 'Your care team',
                 ),
+              // Notification bell + unread badge.
               Stack(
                 children: [
                   IconButton(
@@ -133,16 +159,27 @@ class HomeHeader extends ConsumerWidget {
                       decoration: BoxDecoration(
                         color: colorScheme.surface,
                         shape: BoxShape.circle,
-                        border: Border.all(color: colorScheme.outline.withOpacity(0.1)),
+                        border: Border.all(
+                          color: colorScheme.outline.withOpacity(0.1),
+                        ),
                       ),
-                      child: Icon(AppIcons.notifications, size: 20, color: theme.hintColor),
+                      child: Icon(
+                        AppIcons.notifications,
+                        size: 20,
+                        color: theme.hintColor,
+                      ),
                     ),
                   ),
+                  // Badge based on unreadNotificationsCountProvider.
                   Consumer(
                     builder: (context, ref, child) {
-                      final unreadCount = ref.watch(unreadNotificationsCountProvider);
-                      if (unreadCount == 0) return const SizedBox.shrink();
-                      
+                      final unreadCount = ref.watch(
+                        unreadNotificationsCountProvider,
+                      );
+                      if (unreadCount == 0) {
+                        return const SizedBox.shrink();
+                      }
+
                       return Positioned(
                         right: 8,
                         top: 8,
