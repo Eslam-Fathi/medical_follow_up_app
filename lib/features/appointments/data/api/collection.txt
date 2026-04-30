@@ -488,6 +488,23 @@
 							]
 						}
 					}
+				},
+				{
+					"name": "Get Today's Reminders",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/appointments/today-reminders",
+							"host": ["{{base_url}}"],
+							"path": ["api", "appointments", "today-reminders"]
+						}
+					}
 				}
 			]
 		},
@@ -565,7 +582,7 @@
 	"variable": [
 		{
 			"key": "base_url",
-			"value": "https://medical-app-tau-ten.vercel.app",
+			"value": "https://medical-app-seven-kappa.vercel.app",
 			"type": "string"
 		},
 		{

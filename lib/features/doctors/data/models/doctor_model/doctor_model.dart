@@ -40,6 +40,23 @@ class DoctorModel {
       imageUrl: json['imageUrl']?.toString() ?? '',
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      '_id': id,
+      'userId': {
+        '_id': userId,
+        'name': name,
+      },
+      'specialization': specialty,
+      'rating': rating,
+      'reviewCount': reviewCount,
+      'patientsCount': patientsCount,
+      'yearsOfExperience': int.tryParse(yearsExperience) ?? 0,
+      'aboutMe': aboutMe,
+      'imageUrl': imageUrl,
+    };
+  }
 }
 
 

@@ -30,6 +30,12 @@ class AppIcons {
   static IconData get reportsFilled =>
       AppPlatform.isWeb ? Icons.description : FeatherIcons.fileText;
 
+  static IconData get chat =>
+      AppPlatform.isWeb ? Icons.chat_bubble_outline : FeatherIcons.messageCircle;
+
+  static IconData get chatFilled =>
+      AppPlatform.isWeb ? Icons.chat_bubble : FeatherIcons.messageCircle;
+
   // ----- ACTIONS -----
 
   static IconData get search =>

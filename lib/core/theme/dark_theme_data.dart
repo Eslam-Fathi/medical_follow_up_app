@@ -1,5 +1,5 @@
-// dark_theme.dart
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:medical_follow_up_app/core/utils/colors.dart' show AppColors, HealthCareColors;
 
 
@@ -78,7 +78,7 @@ final ThemeData healtecDarkTheme = ThemeData(
     ),
   ),
   
-  textTheme: const TextTheme(
+  textTheme: GoogleFonts.interTextTheme(const TextTheme(
     displayLarge: TextStyle(
       fontSize: 32,
       fontWeight: FontWeight.bold,
@@ -124,7 +124,7 @@ final ThemeData healtecDarkTheme = ThemeData(
       fontWeight: FontWeight.w600,
       color: HealthCareColors.darkTextPrimary,
     ),
-  ),
+  )),
   
   inputDecorationTheme: InputDecorationTheme(
     filled: true,

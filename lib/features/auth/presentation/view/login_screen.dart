@@ -131,9 +131,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                   // Error from AuthState, if any
                   if (state.error != null)
-                    Text(
-                      state.error!,
-                      style: TextStyle(color: theme.colorScheme.error),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.errorContainer.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: theme.colorScheme.error.withOpacity(0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.error_outline, color: theme.colorScheme.error, size: 20),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              state.error!,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.error,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
 
                   const SizedBox(height: 64),

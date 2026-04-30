@@ -8,9 +8,12 @@ class AppointmentsApi {
   final ApiClient _client;
   AppointmentsApi(this._client);
 
-  Future<List<Appointment>> getAppointments() async {
+  Future<List<Appointment>> getAppointments({String? doctorId}) async {
     try {
-      final res = await _client.dio.get('/api/appointments');
+      final res = await _client.dio.get(
+        '/api/appointments',
+        queryParameters: doctorId != null ? {'doctorId': doctorId} : null,
+      );
       final data = res.data as List<dynamic>;
       return data
           .map((e) => Appointment.fromJson(e as Map<String, dynamic>))
@@ -19,6 +22,37 @@ class AppointmentsApi {
       throw mapDioError(e, fallback: 'Failed to load appointments');
     } catch (_) {
       throw Exception('Failed to load appointments');
+    }
+  }
+
+  Future<List<Appointment>> getTodayReminders() async {
+    try {
+      final res = await _client.dio.get('/api/appointments/today-reminders');
+      final rawData = res.data;
+      
+      List<dynamic> targetList;
+      if (rawData is List) {
+        targetList = rawData;
+      } else if (rawData is Map) {
+        // Fallback for wrapped responses
+        if (rawData.containsKey('data') && rawData['data'] is List) {
+          targetList = rawData['data'] as List<dynamic>;
+        } else if (rawData.containsKey('reminders') && rawData['reminders'] is List) {
+          targetList = rawData['reminders'] as List<dynamic>;
+        } else {
+          targetList = [];
+        }
+      } else {
+        targetList = [];
+      }
+
+      return targetList
+          .map((e) => Appointment.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw mapDioError(e, fallback: 'Failed to load today reminders');
+    } catch (e) {
+      throw Exception('Data Parse Error: $e');
     }
   }
 

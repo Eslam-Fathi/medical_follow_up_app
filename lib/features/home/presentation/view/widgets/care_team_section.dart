@@ -2,106 +2,105 @@ import 'package:flutter/material.dart';
 import 'package:medical_follow_up_app/core/theme/app_icons.dart';
 import 'package:medical_follow_up_app/core/utils/colors.dart';
 import 'package:medical_follow_up_app/features/doctors/data/models/doctor_model/doctor_model.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:medical_follow_up_app/features/doctors/presentation/manager/care_team_provider.dart';
 import 'package:medical_follow_up_app/features/doctors/presentation/view/care_team_detail_screen.dart';
+import 'package:medical_follow_up_app/features/doctors/presentation/view/my_care_team_screen.dart';
 import 'package:medical_follow_up_app/features/profile/data/network/profile_api.dart';
 
-class CareTeamSection extends StatelessWidget {
-final ProfileResponse profile;
+/// Home section showing the user's current care team.
+///
+/// Data source:
+/// - [careTeamProvider] backed by shared_preferences (favorites list).
+/// Actions:
+/// - "See all" opens full care team screen
+/// - Tapping a card opens doctor detail for that care team member.
+class CareTeamSection extends ConsumerWidget {
+  final ProfileResponse profile;
 
   const CareTeamSection({super.key, required this.profile});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
-    // You can later inject this from a ViewModel / repository
-    final doctors = [
-      {
-        'name': 'Dr. Ahmed Hassan',
-        'specialty': 'Cardiologist',
-        'rating': '4.9',
-      },
-      {
-        'name': 'Dr. Sara Ali',
-        'specialty': 'Endocrinologist',
-        'rating': '4.8',
-      },
-    ];
+    // Current care team doctors loaded via Riverpod (persisted locally).
+    final doctors = ref.watch(careTeamProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Section header
+        // Section header: title + "See all" navigation.
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Your care team',
-              style: theme.textTheme.titleLarge,
-            ),
+            Text('Your care team', style: theme.textTheme.titleLarge),
             TextButton(
               onPressed: () {
-                Navigator.of(context).pushNamed('/doctors_list');
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const MyCareTeamScreen(),
+                  ),
+                );
               },
               child: const Text('See all'),
             ),
           ],
         ),
         const SizedBox(height: 8),
+
+        // Horizontal list of doctor cards, or an empty message.
         SizedBox(
-          height: 150,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: doctors.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 12),
-            itemBuilder: (context, index) {
-              final doctor = doctors[index];
-              return _DoctorCard(doctor: doctor, profile: profile ,);
-            },
-          ),
+          height: 170, // Enough height to avoid overflow in the card.
+          child: doctors.isEmpty
+              ? const Center(
+                  child: Text(
+                    'No doctors added to care team yet.\n'
+                    'Please add them from the doctor list.',
+                    textAlign: TextAlign.center,
+                  ),
+                )
+              : ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: doctors.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 12),
+                  itemBuilder: (context, index) {
+                    final doctor = doctors[index];
+                    return _DoctorCard(doctor: doctor, profile: profile);
+                  },
+                ),
         ),
       ],
     );
   }
 }
 
-class _DoctorCard extends StatelessWidget {
+/// Single doctor card used inside [CareTeamSection].
+///
+/// Shows:
+/// - Avatar with doctor icon
+/// - Name and specialty (single line each)
+/// - Rating
+/// - Heart icon to remove the doctor from the care team.
+class _DoctorCard extends ConsumerWidget {
   final ProfileResponse profile;
-  final Map<String, String> doctor;
+  final DoctorModel doctor;
 
   const _DoctorCard({required this.doctor, required this.profile});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
     return GestureDetector(
+      // Open care team detail screen for the selected doctor.
       onTap: () {
-        // Create a DoctorModel from the Map data
-        final doctorModel = DoctorModel(
-          id: doctor['id'] ?? '1',
-          userId: doctor['userId'] ?? '2',
-          name: doctor['name'] ?? '',
-          specialty: doctor['specialty'] ?? '',
-          rating: doctor['rating'] ?? '0',
-          reviewCount: doctor['reviewCount'] ?? '0',
-          patientsCount: doctor['patientsCount'] ?? '0+',
-          yearsExperience: doctor['yearsExperience'] ?? '0',
-          aboutMe: doctor['aboutMe'] ??
-              'Experienced healthcare professional dedicated to providing quality medical care.',
-        );
-
-        // Navigate to detail screen
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => CareTeamDetailScreen(doctor: doctorModel, profile: profile),
+            builder: (context) =>
+                CareTeamDetailScreen(doctor: doctor, profile: profile),
           ),
         );
-        print("##############################################################");
-        print('Tapped on ${doctor['name']}');
-        print("user id: ${profile.user.id}");
-        print("user name: ${profile.user.name}");
-        print("##############################################################");
       },
       child: SizedBox(
         width: 180,
@@ -113,7 +112,7 @@ class _DoctorCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                     CircleAvatar(
+                    CircleAvatar(
                       radius: 18,
                       backgroundColor: HealthCareColors.primary,
                       child: Icon(
@@ -123,13 +122,17 @@ class _DoctorCard extends StatelessWidget {
                       ),
                     ),
                     const Spacer(),
+                    // Remove from care team (toggle favorite off).
                     IconButton(
                       onPressed: () {
-                        // TODO: favorite toggle
+                        ref
+                            .read(careTeamProvider.notifier)
+                            .removeDoctor(doctor.id);
                       },
-                      icon:  Icon(
-                        AppIcons.heart,
+                      icon: const Icon(
+                        Icons.favorite,
                         size: 18,
+                        color: Colors.red,
                       ),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
@@ -137,30 +140,32 @@ class _DoctorCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 12),
-                Text(
-                  doctor['name']!,
-                  style: theme.textTheme.bodyLarge,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                // Doctor name (single line, ellipsis).
+                Flexible(
+                  child: Text(
+                    doctor.name,
+                    style: theme.textTheme.bodyLarge,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  doctor['specialty']!,
-                  style: theme.textTheme.bodySmall,
+                // Doctor specialty (single line, ellipsis).
+                Flexible(
+                  child: Text(
+                    doctor.specialty,
+                    style: theme.textTheme.bodySmall,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
                 const Spacer(),
+                // Rating row.
                 Row(
                   children: [
-                     Icon(
-                      AppIcons.starFilled,
-                      size: 14,
-                      color: Colors.amber,
-                    ),
+                    Icon(AppIcons.starFilled, size: 14, color: Colors.amber),
                     const SizedBox(width: 4),
-                    Text(
-                      doctor['rating']!,
-                      style: theme.textTheme.bodySmall,
-                    ),
+                    Text(doctor.rating, style: theme.textTheme.bodySmall),
                   ],
                 ),
               ],

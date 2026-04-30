@@ -3,7 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiClient {
-  static const String baseUrl = 'https://medical-app-tau-ten.vercel.app';
+  static const String baseUrl = 'https://medical-app-seven-kappa.vercel.app';
 
   static final ApiClient _instance = ApiClient._internal();
   factory ApiClient() => _instance;
@@ -16,9 +16,7 @@ class ApiClient {
         baseUrl: baseUrl,
         connectTimeout: const Duration(seconds: 10),
         receiveTimeout: const Duration(seconds: 10),
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: {'Content-Type': 'application/json'},
       ),
     );
 

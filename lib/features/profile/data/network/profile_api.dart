@@ -3,19 +3,27 @@ import 'package:medical_follow_up_app/core/errors/error_mapper.dart';
 import 'package:medical_follow_up_app/core/network/api_client.dart';
 import 'package:medical_follow_up_app/features/auth/data/models/login/login_response.dart';
 
-
+/// Strongly-typed wrapper for the `/api/auth/profile` response.
+///
+/// The backend returns:
+/// {
+///   "user": { ... },
+///   "patient": { ... } | null,
+///   "doctor": { ... } | null
+/// }
 class ProfileResponse {
+  /// Authenticated user info (always present).
   final UserDto user;
+
+  /// Optional patient profile data if this user has a patient record.
   final Map<String, dynamic>? patient;
+
+  /// Optional doctor profile data if this user has a doctor record.
   final Map<String, dynamic>? doctor;
 
-  ProfileResponse({
-    required this.user,
-    this.patient,
-    this.doctor,
-  });
-  
+  ProfileResponse({required this.user, this.patient, this.doctor});
 
+  /// Creates a [ProfileResponse] from raw JSON returned by the API.
   factory ProfileResponse.fromJson(Map<String, dynamic> json) {
     return ProfileResponse(
       user: UserDto.fromJson(json['user'] as Map<String, dynamic>),
@@ -25,25 +33,31 @@ class ProfileResponse {
   }
 }
 
+/// API service for fetching profile data for the currently
+/// authenticated user.
+///
+/// Uses the shared [ApiClient] (with auth token, base URL, interceptors).
 class ProfileApi {
   final ApiClient _client;
 
   ProfileApi(this._client);
 
- Future<ProfileResponse> getProfile() async {
-  try {
-    final res = await _client.dio.get('/api/auth/profile');
-    return ProfileResponse.fromJson(res.data as Map<String, dynamic>);
-  } on DioException catch (e) {
-    throw mapDioError(e, fallback: 'Failed to load profile');
-  } catch (_) {
-    throw Exception('Failed to load profile');
+  /// Calls `GET /api/auth/profile` and parses the response.
+  ///
+  /// On success: returns a [ProfileResponse] containing user + optional
+  /// patient/doctor objects.
+  ///
+  /// On error: maps Dio errors to user-friendly messages using [mapDioError].
+  Future<ProfileResponse> getProfile() async {
+    try {
+      final res = await _client.dio.get('/api/auth/profile');
+      return ProfileResponse.fromJson(res.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      // Convert low-level Dio error into app-specific exception.
+      throw mapDioError(e, fallback: 'Failed to load profile');
+    } catch (_) {
+      // Fallback for any unexpected error type.
+      throw Exception('Failed to load profile');
+    }
   }
 }
-
-}
-
-
-//here we define the ProfileApi class that uses the ApiClient to fetch the profile data from the backend. We also define a ProfileResponse model to parse the response. The getProfile method makes a GET request to the /api/auth/profile endpoint and returns a ProfileResponse object. We also handle Dio exceptions and map them to user-friendly error messages.
-
-
