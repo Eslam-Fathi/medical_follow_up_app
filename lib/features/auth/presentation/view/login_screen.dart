@@ -25,9 +25,9 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController =
-      TextEditingController(text: 'admin@medical.com'); // test creds
+      TextEditingController(); 
   final _passwordController =
-      TextEditingController(text: 'Admin123456'); // test creds
+      TextEditingController(); 
 
   bool _obscurePassword = true; // local UI state only
 

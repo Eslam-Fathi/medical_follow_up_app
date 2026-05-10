@@ -1,0 +1,10 @@
+{
+  "name": "medical_follow_up_app",
+  "version": "1.0.0",
+  "description": "Medical follow-up app prepared for Vercel hosting",
+  "scripts": {
+    "build": "bash scripts/build_web.sh"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
