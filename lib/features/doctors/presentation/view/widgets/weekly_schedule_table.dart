@@ -12,6 +12,9 @@ class DoctorDaySchedule {
   });
 }
 
+/// A table widget that displays a doctor's weekly working hours.
+/// 
+/// Lists each day of the week and its corresponding time range or "Off" status.
 class WeeklyScheduleTable extends StatelessWidget {
   final List<DoctorDaySchedule> schedule;
 

@@ -32,6 +32,11 @@ Future<void> main() async {
   runApp(const ProviderScope(child: MedME()));
 }
 
+/// The root widget of the application.
+/// 
+/// It configures the global theme, routing table, and top-level providers.
+/// It also listens to authentication state changes to handle global navigation 
+/// (e.g., auto-logout).
 class MedME extends ConsumerWidget {
   const MedME({super.key});
 
@@ -59,7 +64,7 @@ class MedME extends ConsumerWidget {
         );
       },
       scrollBehavior: NoScrollbarScrollBehavior(),
-      title: 'MedME',
+      title: 'medicUp',
       theme: healtecLightTheme,
       darkTheme: healtecDarkTheme,
       themeMode: currentThemeMode,
@@ -82,6 +87,10 @@ class MedME extends ConsumerWidget {
   }
 }
 
+/// The initial entry point screen that handles authentication check and data warming.
+/// 
+/// Displays the splash screen while verifying the user's session and 
+/// pre-fetching essential data for a seamless transition to the main app.
 class StartPoint extends ConsumerStatefulWidget {
   const StartPoint({super.key});
 

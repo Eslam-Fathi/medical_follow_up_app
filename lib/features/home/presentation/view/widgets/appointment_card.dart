@@ -10,6 +10,10 @@ import 'package:medical_follow_up_app/features/medical_record/presentation/view/
 ///
 /// - In patient view: shows doctor name + specialization.
 /// - In doctor view: shows patient name + “Patient” and extra actions (Chat, Record).
+/// A versatile card for displaying appointment details in a list.
+/// 
+/// Context-aware: shows doctor info for patients and patient info for doctors.
+/// Includes status-colored labels and quick action buttons (Chat/Record) for doctors.
 class AppointmentCard extends StatelessWidget {
   final Appointment appointment;
   final bool isDoctorView;

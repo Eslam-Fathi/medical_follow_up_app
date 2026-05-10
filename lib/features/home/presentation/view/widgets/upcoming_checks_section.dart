@@ -9,6 +9,10 @@ import 'package:medical_follow_up_app/features/appointments/data/models/appointm
 ///
 /// Uses [filteredDashboardAppointmentsProvider] and [homeFilterProvider]
 /// to drive both the title and the visible list.
+/// A vertical list of upcoming medical appointments or checkups.
+/// 
+/// Displays a summary of each check (specialty, date) and its current status 
+/// in a compact, scrollable format.
 class UpcomingChecksSection extends ConsumerWidget {
   final VoidCallback onSeeAll;
 

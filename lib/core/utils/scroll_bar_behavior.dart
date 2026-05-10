@@ -1,3 +1,5 @@
+import 'package:flutter/gestures.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class NoScrollbarScrollBehavior extends MaterialScrollBehavior {
@@ -7,7 +9,20 @@ class NoScrollbarScrollBehavior extends MaterialScrollBehavior {
     Widget child,
     ScrollableDetails details,
   ) {
-    // Return child directly = no visible scrollbar
+    // Show scrollbars only on Web
+    if (kIsWeb) {
+      return Scrollbar(
+        controller: details.controller,
+        child: child,
+      );
+    }
     return child;
   }
+
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+        PointerDeviceKind.trackpad,
+      };
 }

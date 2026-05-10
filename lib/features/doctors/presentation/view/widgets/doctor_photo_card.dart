@@ -3,6 +3,9 @@ import 'package:medical_follow_up_app/core/theme/app_icons.dart';
 import 'package:medical_follow_up_app/core/utils/colors.dart';
 
 /// Doctor photo card with image placeholder
+/// A card that displays a doctor's photo placeholder and basic profile summary.
+/// 
+/// Shows the doctor's name, specialty, rating, and review count in a premium-styled card.
 class DoctorPhotoCard extends StatelessWidget {
   final String doctorName;
   final String specialty;

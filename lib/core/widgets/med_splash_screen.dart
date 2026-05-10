@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+/// The initial splash screen of the application.
+/// 
+/// It features a pulse-animated medical icon and the app logo,
+/// providing a polished first impression while the app initializes.
 class MedSplashScreen extends StatefulWidget {
   const MedSplashScreen({super.key});
 

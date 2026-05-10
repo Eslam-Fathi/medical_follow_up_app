@@ -10,6 +10,10 @@ import 'package:medical_follow_up_app/features/notifications/data/models/notific
 /// - Shows a blurred, glassy card.
 /// - Lists recent notifications from [notificationsProvider].
 /// - Allows marking individual notifications as read or all at once.
+/// A floating overlay widget that acts as a central notification hub.
+/// 
+/// It displays a list of recent notifications with glassmorphism styling, 
+/// supporting various types (appointments, messages, reminders).
 class NotificationBubble extends ConsumerStatefulWidget {
   const NotificationBubble({super.key});
 
@@ -248,6 +252,7 @@ class _NotificationBubbleState extends ConsumerState<NotificationBubble>
 ///
 /// - Tapping marks it as read.
 /// - Icon and color depend on [notification.type].
+/// A private helper widget for rendering an individual notification item.
 class _NotificationItem extends ConsumerWidget {
   final AppNotification notification;
 

@@ -6,6 +6,10 @@ import 'package:medical_follow_up_app/core/utils/responsive_wrapper.dart';
 
 /// Screen shown after login to let a logged‑in user complete
 /// their **patient** profile (demographics + medical history).
+/// A data-entry screen for new patients to provide their health background.
+/// 
+/// It collects demographics, blood type, and medical history (chronic diseases, 
+/// allergies) to complete the user's patient profile after initial registration.
 class PatientFormScreen extends ConsumerStatefulWidget {
   const PatientFormScreen({super.key});
 

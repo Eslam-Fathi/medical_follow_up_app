@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:medical_follow_up_app/features/appointments/presentation/manager/providers/appointments_provider.dart';
 
+/// A wrapper widget that monitors upcoming appointments and displays in-app notifications.
+/// 
+/// It uses a timer to periodically check for appointments starting soon and
+/// shows an [AlertDialog] reminder at specific time thresholds (e.g., 15, 10, 5 minutes).
 class GlobalNotificationWrapper extends ConsumerStatefulWidget {
   final Widget child;
   final GlobalKey<NavigatorState> navigatorKey;

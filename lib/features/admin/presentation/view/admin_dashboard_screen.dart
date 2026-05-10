@@ -9,6 +9,10 @@ import 'package:medical_follow_up_app/features/admin/presentation/manager/admin_
 import 'package:medical_follow_up_app/features/admin/presentation/view/widgets/dashboard_stats_grid.dart';
 import 'package:medical_follow_up_app/features/admin/presentation/view/widgets/doctor_specialty_chart.dart';
 
+/// The primary dashboard for administrative users.
+/// 
+/// It displays high-level statistics, doctor specialty distribution charts,
+/// and a list of pending doctor applications for approval or rejection.
 class AdminDashboardScreen extends ConsumerWidget {
   const AdminDashboardScreen({super.key});
 
@@ -263,6 +267,10 @@ class AdminDashboardScreen extends ConsumerWidget {
   }
 }
 
+/// A card representing a doctor application pending administrative approval.
+/// 
+/// Displays doctor details such as specialization, experience, and license number,
+/// with buttons to approve or reject the application.
 class _DoctorApprovalCard extends StatelessWidget {
   final dynamic doctor;
   final Function(String) onApprove;

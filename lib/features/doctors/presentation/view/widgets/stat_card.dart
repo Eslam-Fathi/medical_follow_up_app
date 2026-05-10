@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:medical_follow_up_app/core/utils/colors.dart';
 
 /// Single stat card (patients, years, rating, reviews)
+/// A compact widget for displaying a single numerical statistic with an icon and label.
+/// 
+/// Commonly used to show doctor metrics like patient count, years of experience, or rating.
 class StatCard extends StatelessWidget {
   final IconData icon;
   final String value;

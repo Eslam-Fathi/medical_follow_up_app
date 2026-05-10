@@ -8,6 +8,11 @@ import 'package:medical_follow_up_app/features/auth/data/models/login/login_resp
 /// Adapts between mobile/tablet and desktop by:
 /// - constraining max width
 /// - switching some sections to side-by-side on desktop.
+/// A screen that displays a detailed, read-only view of a patient's medical record.
+/// 
+/// It organizes complex clinical data (respiratory, cardiovascular, etc.) into 
+/// distinct, readable cards. The layout is responsive, transitioning to a 
+/// multi-column view on larger screens.
 class MedicalRecordScreen extends StatelessWidget {
   final UserDto user;
   final Map<String, dynamic> patientRecord;

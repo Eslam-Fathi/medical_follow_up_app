@@ -15,6 +15,10 @@ import 'package:medical_follow_up_app/features/medical_record/presentation/view/
 /// Uses a two-column card:
 /// - LEFT: avatar + header + account basics
 /// - RIGHT: patient/doctor details + settings & logout
+/// A responsive layout for the Profile screen optimized for large displays.
+/// 
+/// Organizes profile information into a multi-column grid, making efficient 
+/// use of horizontal space on desktop and web.
 class ProfileDesktopLayout extends StatelessWidget {
   final UserDto user;
   final Map<String, dynamic>? patient;

@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:medical_follow_up_app/core/utils/colors.dart';
 
+/// An input area for composing and sending chat messages.
+/// 
+/// Includes a multi-line text field and a send button that activates 
+/// when text is entered.
 class MessageComposerWidget extends StatefulWidget {
   final TextEditingController controller;
   final Function(String) onSend;

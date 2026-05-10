@@ -9,6 +9,10 @@ import 'package:medical_follow_up_app/features/appointments/presentation/manager
 /// Uses [nextAppointmentProvider] and handles:
 /// - loading / error / no-appointment fallbacks
 /// - friendly date labels ("Today", "Tomorrow", "5 May").
+/// A specialized card highlighting the user's very next scheduled medical checkup.
+/// 
+/// It emphasizes the date and time of the appointment and provides a quick link 
+/// to view more details.
 class NextFollowUpCard extends ConsumerWidget {
   const NextFollowUpCard({super.key});
 

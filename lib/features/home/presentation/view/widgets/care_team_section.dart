@@ -15,6 +15,9 @@ import 'package:medical_follow_up_app/features/profile/data/network/profile_api.
 /// Actions:
 /// - "See all" opens full care team screen
 /// - Tapping a card opens doctor detail for that care team member.
+/// A section displaying a list of doctors the user has added to their "care team".
+/// 
+/// It provides a quick way to view preferred doctors and navigate to their profiles.
 class CareTeamSection extends ConsumerWidget {
   final ProfileResponse profile;
 

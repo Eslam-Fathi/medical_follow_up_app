@@ -5,6 +5,10 @@ import 'package:medical_follow_up_app/core/utils/colors.dart';
 import 'package:medical_follow_up_app/features/appointments/presentation/manager/providers/appointments_provider.dart';
 import 'package:medical_follow_up_app/features/appointments/data/models/appointment_model.dart';
 
+/// A widget that allows users to select a date and time slot for booking an appointment.
+/// 
+/// It generates available dates (excluding weekends) and time slots, 
+/// and checks against already booked appointments for the selected doctor.
 class BookingSection extends ConsumerStatefulWidget {
   final String doctorId;
   final Function(DateTime) onDateTimeSelected;

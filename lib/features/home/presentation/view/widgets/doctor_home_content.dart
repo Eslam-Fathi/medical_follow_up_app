@@ -13,6 +13,10 @@ import 'recent_chats_section.dart';
 /// - A stats grid (today's total, pending, confirmed, total patients)
 /// - Filtered appointments list (All/Upcoming/Missed/Completed)
 /// - Recent patient chats.
+/// The main dashboard content specialized for the "Doctor" role.
+/// 
+/// Aggregates statistics, provides a filtered view of appointments, and 
+/// shows recent patient interactions.
 class DoctorHomeContent extends ConsumerWidget {
   const DoctorHomeContent({super.key});
 

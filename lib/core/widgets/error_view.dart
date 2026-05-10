@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:medical_follow_up_app/core/errors/failure.dart';
 import 'package:medical_follow_up_app/core/utils/colors.dart';
 
+/// A widget that displays an error message with an optional retry button.
+/// 
+/// This widget handles displaying different types of [Failure]s and provides
+/// a consistent UI for error states across the app.
 class ErrorView extends StatelessWidget {
   final Failure failure;
   final VoidCallback? onRetry;
