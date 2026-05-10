@@ -31,8 +31,8 @@ export PATH="$PATH:`pwd`/flutter/bin"
 
 # 3. Flutter Configuration
 echo "⚙️ Configuring Flutter..."
-flutter config --no-analytics
 flutter config --enable-web
+flutter doctor
 
 # 4. Dependency Management
 echo "📦 Installing project dependencies..."
@@ -41,7 +41,7 @@ flutter pub get
 # 5. Build Process
 echo "🏗️ Building Flutter Web (Release Mode)..."
 # Using CanvasKit renderer for superior chart and animation performance
-flutter build web --release --base-href / --web-renderer canvaskit
+flutter build web --release --base-href "/" --web-renderer canvaskit --disable-analytics
 
 echo "✅ Build Process Completed Successfully!"
 echo "📁 Output directory: build/web"
