@@ -5,6 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:medical_follow_up_app/features/auth/presentation/view/login_screen.dart';
 import 'package:medical_follow_up_app/features/auth/presentation/view/register_screen.dart';
 
+/// A container widget that switches between [LoginScreen] and [RegisterScreen] with a flip animation.
+/// 
+/// It manages the toggle state and provides a unified background and card container
+/// for the authentication flow.
 class AuthSwitcher extends StatefulWidget {
   const AuthSwitcher({super.key});
 
@@ -190,6 +194,7 @@ class _AuthSwitcherState extends State<AuthSwitcher> {
   }
 }
 
+/// A private button widget used for toggling between Login and Sign up in [AuthSwitcher].
 class _TabButton extends StatelessWidget {
   final String label;
   final bool selected;

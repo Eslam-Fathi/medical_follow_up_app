@@ -8,6 +8,11 @@ import 'package:medical_follow_up_app/features/medical_record/presentation/view/
 import 'package:medical_follow_up_app/core/utils/responsive_wrapper.dart';
 import 'package:medical_follow_up_app/features/medical_record/presentation/view/medical_record_screen.dart';
 
+/// A detailed view of a specific appointment.
+/// 
+/// Provides comprehensive information about the appointment, including participant details,
+/// status, and scheduled time. If [isDoctorView] is true, it shows clinical actions
+/// like updating medical records and confirming/completing appointments.
 class AppointmentDetailScreen extends ConsumerStatefulWidget {
   final Appointment appointment;
   final bool isDoctorView;

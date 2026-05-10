@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 ///
 /// Shows an icon, a numeric/value highlight, and a short label.
 /// Color is injected so the same widget can be reused for different stats.
+/// A reusable card for displaying a specific numeric statistic for doctors.
+/// 
+/// Used to build the statistics grid on the doctor's dashboard.
 class DoctorStatCard extends StatelessWidget {
   final String title;
   final String value;

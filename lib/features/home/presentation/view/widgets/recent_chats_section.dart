@@ -7,6 +7,10 @@ import 'package:medical_follow_up_app/features/chat/presentation/view/chat_scree
 
 /// Shows a list of patients the doctor can quickly chat with,
 /// derived from their existing appointments.
+/// A dashboard section listing patients with whom the doctor has recently interacted.
+/// 
+/// Allows doctors to quickly resume conversations or check in on patients 
+/// they have seen.
 class RecentChatsSection extends ConsumerWidget {
   const RecentChatsSection({super.key});
 

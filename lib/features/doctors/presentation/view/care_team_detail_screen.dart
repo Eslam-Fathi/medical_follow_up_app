@@ -16,6 +16,10 @@ import 'package:medical_follow_up_app/features/doctors/presentation/view/widgets
 // import 'package:medical_follow_up_app/features/appointments/presentation/providers/book_appointment_provider.dart';
 // import 'package:medical_follow_up_app/features/profile/data/models/profile_response.dart';
 
+/// A screen displaying detailed information about a specific doctor.
+/// 
+/// It includes the doctor's profile photo, statistics (patients, experience, rating),
+/// about section, weekly schedule, and an [Appointment] booking section.
 class CareTeamDetailScreen extends ConsumerStatefulWidget {
   final DoctorModel doctor;
   final ProfileResponse profile; // <-- coming from Home

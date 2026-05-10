@@ -12,6 +12,9 @@ import 'appointment_card.dart';
 /// - Title + "See all" action
 /// - A horizontal list of upcoming (pending/confirmed) appointments
 ///   or an empty/loader/error state.
+/// A dashboard section for doctors displaying their upcoming appointments.
+/// 
+/// Filters and shows PENDING/CONFIRMED bookings in a horizontal scrollable list.
 class DoctorAppointmentsSection extends ConsumerWidget {
   final VoidCallback onSeeAll;
 

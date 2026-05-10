@@ -1,6 +1,9 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
+/// A pie chart displaying the distribution of doctors across different specialties.
+/// 
+/// Uses [fl_chart] to render the data and includes a color-coded legend.
 class DoctorSpecialtyChart extends StatelessWidget {
   final Map<String, int> specialtyDistribution;
 

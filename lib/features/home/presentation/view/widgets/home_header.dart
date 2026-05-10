@@ -12,6 +12,10 @@ import 'package:medical_follow_up_app/features/notifications/presentation/view/w
 /// - Show greeting + user name/role
 /// - Optional care team button (mobile)
 /// - Notification bell with unread badge and overlay bubble.
+/// The top-most section of the Home screen containing user info and actions.
+/// 
+/// Shows a personalized greeting, the user's role, a notification icon with 
+/// an unread badge, and an optional button to open the care team drawer on mobile.
 class HomeHeader extends ConsumerWidget {
   final VoidCallback? onCareTeamPressed;
   final String userName;

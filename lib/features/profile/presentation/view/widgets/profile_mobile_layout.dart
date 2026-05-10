@@ -21,6 +21,10 @@ import 'package:medical_follow_up_app/features/medical_record/presentation/view/
 /// - provides quick access to full medical records (for patients)
 /// - includes a settings / logout section
 /// all with simple entrance animations.
+/// A mobile-first layout for the Profile screen.
+/// 
+/// Features a scrollable single-column design with collapsible sections 
+/// and integrated actions for managing account and health details.
 class ProfileMobileLayout extends ConsumerStatefulWidget {
   final UserDto user;
   final Map<String, dynamic>? patient;

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:medical_follow_up_app/core/utils/colors.dart';
 
+/// A premium 404 error screen displayed when a user navigates to a non-existent route.
+/// 
+/// It provides a clear message and a primary action to return to the home screen.
 class NotFoundScreen extends StatelessWidget {
   const NotFoundScreen({super.key});
 

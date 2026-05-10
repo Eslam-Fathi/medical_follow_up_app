@@ -5,6 +5,10 @@ import 'package:medical_follow_up_app/core/utils/colors.dart';
 ///
 /// [filters] is the list of labels, [selectedIndex] is the current selection,
 /// and [onFilterSelected] is called with the new index when a chip is tapped.
+/// A horizontal list of selectable chips used to filter appointment lists.
+/// 
+/// Provides a visually clear way for users to switch between appointment 
+/// categories (e.g., All, Upcoming, Missed).
 class FilterChipsRow extends StatelessWidget {
   final List<String> filters;
   final int selectedIndex;

@@ -9,6 +9,10 @@ import 'widgets/profile_mobile_layout.dart';
 import 'widgets/profile_desktop_layout.dart';
 
 /// Profile screen that reads profileProvider and chooses mobile/desktop layout.
+/// The main profile management screen.
+/// 
+/// It fetches user profile data and delegates the UI rendering to either 
+/// [ProfileMobileLayout] or [ProfileDesktopLayout] based on the screen size.
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 

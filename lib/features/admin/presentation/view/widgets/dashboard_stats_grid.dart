@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+/// A grid that displays key administrative statistics.
+/// 
+/// Shows total doctors, pending approvals, and total appointments in a 
+/// responsive grid layout that adapts to screen width.
 class DashboardStatsGrid extends StatelessWidget {
   final int totalDoctors;
   final int pendingApprovals;
@@ -51,6 +55,7 @@ class DashboardStatsGrid extends StatelessWidget {
   }
 }
 
+/// A single statistics card used within the [DashboardStatsGrid].
 class _StatCard extends StatelessWidget {
   final String title;
   final String value;

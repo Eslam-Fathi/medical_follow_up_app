@@ -4,6 +4,10 @@ import 'package:medical_follow_up_app/core/utils/colors.dart';
 import 'package:medical_follow_up_app/features/chat/data/models/chat_message_model/chat_message.dart';
 import 'package:medical_follow_up_app/features/chat/presentation/view/chat_screen.dart';
 
+/// A single message bubble within the chat interface.
+/// 
+/// It styles the message differently based on whether it was sent by the 
+/// current user or the chat partner, and supports markdown formatting.
 class ChatBubbleWidget extends StatelessWidget {
   final ChatMessage message;
 

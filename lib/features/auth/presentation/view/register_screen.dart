@@ -3,8 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:medical_follow_up_app/features/auth/presentation/manager/state/auth_notifier.dart';
 import 'package:medical_follow_up_app/core/network/api_providers.dart';
 import 'package:medical_follow_up_app/core/utils/responsive_wrapper.dart';
+import 'package:medical_follow_up_app/core/models/doctor_specialization.dart';
 
 /// RegisterScreen for creating a new user (PATIENT by default).
+/// The registration interface for creating new patient or doctor accounts.
+/// 
+/// It captures user details and handles role-specific flows, such as 
+/// collecting additional professional details for doctor accounts.
 class RegisterScreen extends ConsumerStatefulWidget {
   final VoidCallback onLoginTap;
 
@@ -37,7 +42,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   Future<Map<String, dynamic>?> _showDoctorDetailsDialog() async {
     final licenseController = TextEditingController(text: _doctorDetails['licenseNumber']?.toString() ?? '');
-    final specController = TextEditingController(text: _doctorDetails['specialization']?.toString() ?? '');
+    DoctorSpecialization? selectedSpec = _doctorDetails['specialization'] != null 
+        ? DoctorSpecialization.fromString(_doctorDetails['specialization']) 
+        : null;
     final expController = TextEditingController(text: _doctorDetails['yearsOfExperience']?.toString() ?? '');
 
     return showDialog<Map<String, dynamic>>(
@@ -49,10 +56,22 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
-                controller: specController,
-                decoration: const InputDecoration(labelText: 'Specialization', hintText: 'e.g. Cardiology'),
-                autofocus: true,
+              DropdownButtonFormField<DoctorSpecialization>(
+                value: selectedSpec,
+                decoration: const InputDecoration(
+                  labelText: 'Specialization',
+                  hintText: 'Select your specialty',
+                ),
+                items: DoctorSpecialization.values.map((spec) {
+                  return DropdownMenuItem(
+                    value: spec,
+                    child: Text(spec.displayName),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  selectedSpec = value;
+                },
+                validator: (value) => value == null ? 'Please select a specialization' : null,
               ),
               const SizedBox(height: 12),
               TextField(
@@ -74,14 +93,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             ),
             ElevatedButton(
               onPressed: () {
-                if (licenseController.text.trim().isEmpty || specController.text.trim().isEmpty || expController.text.trim().isEmpty) {
+                if (licenseController.text.trim().isEmpty || selectedSpec == null || expController.text.trim().isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('All fields are required')),
                   );
                 } else {
                   Navigator.of(context).pop({
                     'licenseNumber': licenseController.text.trim(),
-                    'specialization': specController.text.trim(),
+                    'specialization': selectedSpec!.displayName,
                     'yearsOfExperience': int.tryParse(expController.text.trim()) ?? 0,
                   });
                 }

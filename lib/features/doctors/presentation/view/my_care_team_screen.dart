@@ -6,6 +6,10 @@ import 'package:medical_follow_up_app/features/doctors/presentation/view/care_te
 import 'package:medical_follow_up_app/features/profile/presentation/manager/profile.provider.dart';
 import 'package:medical_follow_up_app/core/utils/responsive_wrapper.dart';
 
+/// A screen displaying the user's personalized list of healthcare providers.
+/// 
+/// It allows users to quickly access the profiles of doctors they have 
+/// added to their care team or remove them if no longer needed.
 class MyCareTeamScreen extends ConsumerWidget {
   const MyCareTeamScreen({super.key});
 

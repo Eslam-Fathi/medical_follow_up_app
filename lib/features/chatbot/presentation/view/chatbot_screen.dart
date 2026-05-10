@@ -8,6 +8,10 @@ import 'package:medical_follow_up_app/core/utils/responsive_wrapper.dart';
 import 'package:medical_follow_up_app/core/theme/app_icons.dart';
 import 'package:medical_follow_up_app/features/chatbot/presentation/manager/chatbot_provider.dart';
 
+/// An AI-powered chat interface providing medical guidance and app support.
+/// 
+/// Users can ask questions, and the AI (Aurora AI) responds with formatted
+/// medical information and suggestions. Includes quick actions for common queries.
 class ChatBotScreen extends ConsumerStatefulWidget {
   const ChatBotScreen({super.key});
 
@@ -466,6 +470,7 @@ class _ChatBotScreenState extends ConsumerState<ChatBotScreen> {
   }
 }
 
+/// A visual indicator showing that the AI is currently generating a response.
 class _TypingIndicatorBubble extends StatefulWidget {
   final bool isDark;
   const _TypingIndicatorBubble({required this.isDark});
@@ -532,6 +537,7 @@ class _TypingIndicatorBubbleState extends State<_TypingIndicatorBubble>
   }
 }
 
+/// A single bouncing dot used within the [_TypingIndicatorBubble].
 class _BouncingDot extends StatelessWidget {
   final int index;
   final AnimationController controller;

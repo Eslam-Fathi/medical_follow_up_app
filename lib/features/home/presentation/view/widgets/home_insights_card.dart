@@ -7,6 +7,10 @@ import 'package:medical_follow_up_app/features/appointments/presentation/manager
 ///
 /// - For doctors: shows "Today's Overview" with today’s total & pending appointments.
 /// - For patients: shows simple health stats (blood type + placeholders for vitals).
+/// A prominent card providing high-level health or practice insights.
+/// 
+/// Role-aware: shows health stats for patients and appointment summaries for doctors.
+/// Uses a vibrant gradient to draw user attention to key metrics.
 class HomeInsightsCard extends ConsumerWidget {
   final String role;
   final Map<String, dynamic>? patientRecord;

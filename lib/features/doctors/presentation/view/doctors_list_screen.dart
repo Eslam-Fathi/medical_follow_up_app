@@ -7,6 +7,10 @@ import 'package:medical_follow_up_app/features/profile/presentation/manager/prof
 import 'package:medical_follow_up_app/features/doctors/presentation/manager/care_team_provider.dart';
 import 'package:medical_follow_up_app/core/utils/responsive_wrapper.dart';
 
+/// A screen for searching and discovering doctors.
+/// 
+/// It features a search bar to filter doctors by name or specialty and 
+/// provides options to view their profiles or add them to the user's care team.
 class DoctorsListScreen extends ConsumerStatefulWidget {
   const DoctorsListScreen({super.key});
 

@@ -34,6 +34,11 @@ import 'widgets/doctor_home_content.dart';
 /// - Adapt layout for mobile vs desktop
 /// - Handle navigation between tabs (home, checks, chatbot, profile)
 /// - Schedule OS-level appointment reminders via [NotificationService].
+/// The central navigation hub of the application for both patients and doctors.
+/// 
+/// It adaptively displays content based on the user's role (Patient/Doctor) and 
+/// device type (Mobile/Desktop). It manages tabs for Home, Appointments, Chatbot, 
+/// and Profile.
 class HomeFollowUpScreen extends ConsumerStatefulWidget {
   const HomeFollowUpScreen({super.key});
 
@@ -169,6 +174,7 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen>
         final colorScheme = theme.colorScheme;
         final isDesktop = Responsive.isDesktop(context);
         final isMobile = Responsive.isMobile(context);
+        final bool isDoctor = user.role.toUpperCase() == 'DOCTOR';
 
         return PopScope(
           canPop: false, // Prevents back navigation from home.
@@ -176,7 +182,7 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen>
             key: _scaffoldKey,
             backgroundColor: colorScheme.background,
             // On mobile, the care team is accessed via an end drawer.
-            endDrawer: isMobile
+            endDrawer: isMobile && !isDoctor
                 ? SizedBox(
                     width: MediaQuery.of(context).size.width * 0.8,
                     child: Drawer(
@@ -215,6 +221,8 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen>
     Map<String, dynamic>? patient,
     Map<String, dynamic>? doctor,
   ) {
+    final bool isDoctor = user.role.toUpperCase() == 'DOCTOR';
+
     if (_selectedBottomIndex == 1) {
       return _buildChecksTab(user);
     }
@@ -228,18 +236,17 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen>
           title: const Text('Profile'),
           automaticallyImplyLeading: false,
           actions: [
-            IconButton(
-              icon: Icon(AppIcons.heart),
-              onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
-              tooltip: 'Your care team',
-            ),
+            if (!isDoctor)
+              IconButton(
+                icon: Icon(AppIcons.heart),
+                onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+                tooltip: 'Your care team',
+              ),
           ],
         ),
         body: const ProfileScreen(),
       );
     }
-
-    final bool isDoctor = user.role.toUpperCase() == 'DOCTOR';
 
     // Home tab (index 0).
     return RefreshIndicator(
@@ -330,6 +337,7 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
+    final bool isDoctor = user.role.toUpperCase() == 'DOCTOR';
     final bool isChecksTab = _selectedBottomIndex == 1;
     final bool isChatbotTab = _selectedBottomIndex == 2;
     final bool isProfileTab = _selectedBottomIndex == 3;
@@ -430,20 +438,21 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen>
                 ),
         ),
         // Right: care team sidebar.
-        Expanded(
-          flex: 3,
-          child: Container(
-            color: isDark ? HealthCareColors.darkSurface : Colors.white,
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-                child: CareTeamSection(
-                  profile: profile, // desktop care team column
+        if (!isDoctor)
+          Expanded(
+            flex: 3,
+            child: Container(
+              color: isDark ? HealthCareColors.darkSurface : Colors.white,
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                  child: CareTeamSection(
+                    profile: profile, // desktop care team column
+                  ),
                 ),
               ),
             ),
           ),
-        ),
       ],
     );
   }
@@ -467,7 +476,7 @@ class _HomeFollowUpScreenState extends ConsumerState<HomeFollowUpScreen>
             },
             tooltip: 'Refresh Appointments',
           ),
-          if (Responsive.isMobile(context))
+          if (Responsive.isMobile(context) && !isDoctor)
             IconButton(
               icon: Icon(AppIcons.heart),
               onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),

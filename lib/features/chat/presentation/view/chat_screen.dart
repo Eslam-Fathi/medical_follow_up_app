@@ -10,6 +10,10 @@ import 'package:medical_follow_up_app/core/utils/colors.dart';
 import 'package:medical_follow_up_app/features/chat/presentation/manager/chat_provider.dart';
 import 'widgets/chat_bubble_widget.dart';
 
+/// A screen for real-time communication between patients and doctors.
+/// 
+/// It displays a scrollable list of [ChatBubbleWidget]s and provides a 
+/// [MessageComposerWidget] for sending new messages.
 class ChatScreen extends ConsumerStatefulWidget {
   final String chatPartnerName;
   final String otherUserId;

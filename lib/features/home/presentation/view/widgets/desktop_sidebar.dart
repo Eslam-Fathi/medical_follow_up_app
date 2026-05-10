@@ -11,6 +11,10 @@ import 'package:medical_follow_up_app/core/theme/theme_provider.dart';
 /// - Main navigation (Home / Checks / Chatbot / Profile)
 /// - Theme toggle (light/dark)
 /// - Logout action at the bottom.
+/// A vertical navigation sidebar for desktop and web viewports.
+/// 
+/// Supports an expandable "hover" state to reveal labels, includes theme toggling,
+/// and handles high-level app navigation.
 class DesktopSidebar extends StatefulWidget {
   final int selectedIndex;
   final ValueChanged<int> onTabSelected;
@@ -207,6 +211,7 @@ class _DesktopSidebarState extends State<DesktopSidebar> {
 /// A single clickable row in the sidebar (icon [+ text when expanded]).
 ///
 /// Handles hover styling and selected state visuals.
+/// A private helper widget for individual sidebar navigation rows.
 class _SidebarItem extends StatefulWidget {
   final IconData icon;
   final IconData activeIcon;

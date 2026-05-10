@@ -9,6 +9,10 @@ import 'package:medical_follow_up_app/core/utils/responsive_wrapper.dart';
 /// - Medications
 /// - Respiratory system
 /// - Cardiovascular system
+/// An interactive form for doctors to create or update patient medical records.
+/// 
+/// It handles complex input validation for clinical data, manages form state 
+/// across multiple sections, and submits the finalized record to the backend.
 class MedicalRecordFormScreen extends StatefulWidget {
   final String patientDisplayId;
   final String patientName;

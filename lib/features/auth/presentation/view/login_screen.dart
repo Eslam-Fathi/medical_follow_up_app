@@ -6,6 +6,10 @@ import 'package:medical_follow_up_app/features/auth/presentation/manager/state/a
 
 /// LoginScreen only handles UI & form.
 /// All network/auth logic is in AuthNotifier.
+/// The login interface for users to access their accounts.
+/// 
+/// It handles email and password input, form validation, and displays 
+/// authentication errors. Logic is delegated to [AuthNotifier].
 class LoginScreen extends ConsumerStatefulWidget {
   final VoidCallback onCreateAccountTap;
 
