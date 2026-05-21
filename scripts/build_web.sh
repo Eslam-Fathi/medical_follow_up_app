@@ -12,6 +12,7 @@ export GIT_TERMINAL_PROMPT=0
 # Create .env from Vercel secrets
 if [ ! -f ".env" ]; then
   echo "📝 Generating .env from environment variables..."
+  touch .env
   if [ -z "$GEMINI_API_KEY" ]; then
     echo "⚠️ Warning: GEMINI_API_KEY is not set in environment variables."
   else
