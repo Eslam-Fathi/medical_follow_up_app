@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 /// The initial splash screen of the application.
-/// 
+///
 /// It features a pulse-animated medical icon and the app logo,
 /// providing a polished first impression while the app initializes.
 class MedSplashScreen extends StatefulWidget {
@@ -85,24 +86,28 @@ class _MedSplashScreenState extends State<MedSplashScreen>
                         color: theme.colorScheme.primaryContainer,
                         boxShadow: [
                           BoxShadow(
-                            color: theme.colorScheme.primary
-                                .withOpacity(0.4 * _fadeAnimation.value),
+                            color: theme.colorScheme.primary.withOpacity(
+                              0.4 * _fadeAnimation.value,
+                            ),
                             blurRadius: 35,
                             spreadRadius: 8,
                           ),
                           BoxShadow(
-                            color: theme.colorScheme.secondary
-                                .withOpacity(0.2 * _fadeAnimation.value),
+                            color: theme.colorScheme.secondary.withOpacity(
+                              0.2 * _fadeAnimation.value,
+                            ),
                             blurRadius: 20,
                             spreadRadius: -2,
                           ),
                         ],
                       ),
-                      child: Icon(
-                        // Placeholder Icon
-                        Icons.medical_services_rounded,
-                        size: 65,
-                        color: theme.colorScheme.onPrimaryContainer,
+                      padding: const EdgeInsets.all(28),
+                      child: SvgPicture.asset(
+                        'assets/SVG/Ico.svg',
+                        colorFilter: ColorFilter.mode(
+                          theme.colorScheme.onPrimaryContainer,
+                          BlendMode.srcIn,
+                        ),
                       ),
                     ),
                   ),
@@ -113,7 +118,7 @@ class _MedSplashScreenState extends State<MedSplashScreen>
 
             // App Title Placeholder
             Text(
-              'MedME',
+              'MediTrack',
               style: theme.textTheme.displaySmall?.copyWith(
                 fontWeight: FontWeight.w800,
                 letterSpacing: 1.5,
@@ -127,7 +132,7 @@ class _MedSplashScreenState extends State<MedSplashScreen>
               opacity: 0.8,
               duration: const Duration(seconds: 1),
               child: Text(
-                'Your Health Companion',
+                'Smart Medical System',
                 style: theme.textTheme.titleMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                   letterSpacing: 0.5,
@@ -144,7 +149,9 @@ class _MedSplashScreenState extends State<MedSplashScreen>
               child: CircularProgressIndicator(
                 strokeWidth: 3.5,
                 color: theme.colorScheme.primary.withOpacity(0.8),
-                backgroundColor: theme.colorScheme.primaryContainer.withOpacity(0.3),
+                backgroundColor: theme.colorScheme.primaryContainer.withOpacity(
+                  0.3,
+                ),
               ),
             ),
           ],

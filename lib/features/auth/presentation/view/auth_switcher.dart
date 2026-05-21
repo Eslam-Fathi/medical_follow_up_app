@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:medical_follow_up_app/features/auth/presentation/view/login_screen.dart';
 import 'package:medical_follow_up_app/features/auth/presentation/view/register_screen.dart';
@@ -93,15 +94,18 @@ class _AuthSwitcherState extends State<AuthSwitcher> {
 
                 // Tween from ±half-turn (π radians) to 0 — the animation plays
                 // forward (0→1), so the widget starts rotated and ends at 0.
-                final rotateAnim = Tween<double>(
-                  begin: isLoginSide ? -0.5 : 0.5, // in "turns" (0.5 = half turn)
-                  end: 0.0,
-                ).animate(
-                  CurvedAnimation(
-                    parent: animation,
-                    curve: Curves.easeInOutCubic,
-                  ),
-                );
+                final rotateAnim =
+                    Tween<double>(
+                      begin: isLoginSide
+                          ? -0.5
+                          : 0.5, // in "turns" (0.5 = half turn)
+                      end: 0.0,
+                    ).animate(
+                      CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.easeInOutCubic,
+                      ),
+                    );
 
                 return AnimatedBuilder(
                   animation: rotateAnim,
@@ -157,7 +161,28 @@ class _AuthSwitcherState extends State<AuthSwitcher> {
                         children: [
                           const SizedBox(height: 24),
                           // App name branding at the top of the auth card.
-                          Text('MedME', style: theme.textTheme.headlineMedium),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              SvgPicture.asset(
+                                'assets/SVG/Ico.svg',
+                                colorFilter: ColorFilter.mode(
+                                  theme.colorScheme.primary,
+                                  BlendMode.srcIn,
+                                ),
+                                width: 28,
+                                height: 28,
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                'MediTrack',
+                                style: theme.textTheme.headlineMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.colorScheme.onSurface,
+                                ),
+                              ),
+                            ],
+                          ),
                           const SizedBox(height: 4),
                           // Subtitle animates between "Login to continue" and
                           // "Create your account" as the tab switches.
@@ -217,8 +242,9 @@ class _AuthSwitcherState extends State<AuthSwitcher> {
             // Animated sliding indicator pill.
             AnimatedAlign(
               duration: const Duration(milliseconds: 250),
-              alignment:
-                  _showLogin ? Alignment.centerLeft : Alignment.centerRight,
+              alignment: _showLogin
+                  ? Alignment.centerLeft
+                  : Alignment.centerRight,
               curve: Curves.easeOutCubic,
               child: Container(
                 width: 120,

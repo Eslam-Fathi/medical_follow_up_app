@@ -138,7 +138,7 @@ class MedME extends ConsumerWidget {
       // Apply the custom scroll behavior globally (see scroll_bar_behavior.dart).
       scrollBehavior: NoScrollbarScrollBehavior(),
 
-      title: 'medicUp',
+      title: 'MediTrack',
 
       // The light and dark ThemeData objects are defined in:
       // - core/theme/light_theme_data.dart
@@ -170,9 +170,7 @@ class MedME extends ConsumerWidget {
 
       // Fallback for any route name not found in the table above.
       onUnknownRoute: (settings) {
-        return MaterialPageRoute(
-          builder: (context) => const NotFoundScreen(),
-        );
+        return MaterialPageRoute(builder: (context) => const NotFoundScreen());
       },
     );
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:medical_follow_up_app/core/theme/app_icons.dart';
 import 'package:medical_follow_up_app/core/utils/colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,7 +13,7 @@ import 'package:medical_follow_up_app/core/theme/theme_provider.dart';
 /// - Theme toggle (light/dark)
 /// - Logout action at the bottom.
 /// A vertical navigation sidebar for desktop and web viewports.
-/// 
+///
 /// Supports an expandable "hover" state to reveal labels, includes theme toggling,
 /// and handles high-level app navigation.
 class DesktopSidebar extends StatefulWidget {
@@ -180,21 +181,25 @@ class _DesktopSidebarState extends State<DesktopSidebar> {
             : MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
               color: HealthCareColors.primary,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(
-              AppIcons.activity,
-              color: Colors.white,
-              size: _isExpanded ? 24 : 20,
+            child: SvgPicture.asset(
+              'assets/SVG/Ico.svg',
+              colorFilter: const ColorFilter.mode(
+                Colors.white,
+                BlendMode.srcIn,
+              ),
+              width: _isExpanded ? 24 : 20,
+              height: _isExpanded ? 24 : 20,
             ),
           ),
           if (_isExpanded) ...[
             const SizedBox(width: 12),
             Text(
-              'HealFolio',
+              'MediTrack',
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: isDark ? Colors.white : Colors.black87,

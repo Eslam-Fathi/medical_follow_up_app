@@ -1,6 +1,6 @@
 {
-    "name": "medical_follow_up_app",
-    "short_name": "medical_follow_up_app",
+    "name": "MediTrack",
+    "short_name": "MediTrack",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
