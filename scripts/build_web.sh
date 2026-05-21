@@ -22,10 +22,10 @@ if [ ! -f ".env" ]; then
 fi
 
 # 2. Flutter SDK Setup
-# Vercel build environment doesn't have Flutter. We download the stable version.
+# Vercel build environment doesn't have Flutter. We download the specific version that matches your local environment.
 if [ ! -d "flutter" ]; then
-  echo "📥 Cloning Flutter SDK (stable)..."
-  git clone https://github.com/flutter/flutter.git -b stable --depth 1
+  echo "📥 Cloning Flutter SDK (3.41.9)..."
+  git clone https://github.com/flutter/flutter.git -b 3.41.9 --depth 1
 else
   echo "📦 Flutter SDK already exists, skipping clone."
 fi
@@ -44,7 +44,7 @@ flutter pub get
 # 5. Build Process
 echo "🏗️ Building Flutter Web (Release Mode)..."
 # Note: --web-renderer was removed in Flutter 3.22+. CanvasKit is now the default.
-flutter build web --release --base-href "/" --suppress-analytics
+flutter build web -v --release --base-href "/" --suppress-analytics
 
 echo "✅ Build Process Completed Successfully!"
 echo "📁 Output directory: build/web"
