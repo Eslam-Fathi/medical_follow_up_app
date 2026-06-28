@@ -19,3 +19,6 @@
     public <init>(android.content.Context, android.util.AttributeSet, int);
     public void set*(...);
 }
+
+# Fix for R8 missing classes from com.google.android.play.core (used internally by Flutter engine for deferred components)
+-dontwarn com.google.android.play.core.**

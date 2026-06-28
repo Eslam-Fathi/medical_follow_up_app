@@ -1,19 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:medical_follow_up_app/core/utils/responsive_wrapper.dart';
+import 'package:medical_follow_up_app/features/medical_record/data/api/medical_record_api.dart';
 
 /// Form screen used by clinicians to create/update a patient's
 /// detailed medical record.
-///
-/// It builds a large payload map from multiple sections:
-/// - Clinical overview
-/// - Medications
-/// - Respiratory system
-/// - Cardiovascular system
-/// An interactive form for doctors to create or update patient medical records.
-/// 
-/// It handles complex input validation for clinical data, manages form state 
-/// across multiple sections, and submits the finalized record to the backend.
-class MedicalRecordFormScreen extends StatefulWidget {
+class MedicalRecordFormScreen extends ConsumerStatefulWidget {
   final String patientDisplayId;
   final String patientName;
 
@@ -24,12 +16,14 @@ class MedicalRecordFormScreen extends StatefulWidget {
   });
 
   @override
-  State<MedicalRecordFormScreen> createState() =>
+  ConsumerState<MedicalRecordFormScreen> createState() =>
       _MedicalRecordFormScreenState();
 }
 
-class _MedicalRecordFormScreenState extends State<MedicalRecordFormScreen> {
+class _MedicalRecordFormScreenState
+    extends ConsumerState<MedicalRecordFormScreen> {
   final _formKey = GlobalKey<FormState>();
+  bool _isLoading = false;
 
   // ---------------- CONTROLLERS ----------------
   // Overview controllers
@@ -68,7 +62,7 @@ class _MedicalRecordFormScreenState extends State<MedicalRecordFormScreen> {
   final _chestTubeCtrl = TextEditingController();
 
   // Cardio controllers
-  final _pulseSeriesCtrl = TextEditingController(); // comma separated
+  final _pulseSeriesCtrl = TextEditingController();
   final _pulseRateCtrl = TextEditingController();
   final _pulseRhythmCtrl = TextEditingController();
   final _pulseAmplitudeCtrl = TextEditingController();
@@ -76,11 +70,94 @@ class _MedicalRecordFormScreenState extends State<MedicalRecordFormScreen> {
   final _bpSeriesCtrl = TextEditingController();
   final _mapCtrl = TextEditingController();
 
-  bool _isLoading = false;
+  @override
+  void initState() {
+    super.initState();
+    _loadExistingRecord();
+  }
+
+  Future<void> _loadExistingRecord() async {
+    setState(() => _isLoading = true);
+    try {
+      final api = ref.read(medicalRecordApiProvider);
+      final data =
+          await api.getMedicalRecordByPatientId(widget.patientDisplayId);
+      if (data.isNotEmpty && mounted) {
+        setState(() {
+          _departmentCtrl.text = _str(data['department']);
+          _admissionDateCtrl.text = _str(data['admissionDate']);
+          _bedNoCtrl.text = _str(data['bedNo']);
+          _allergiesTextCtrl.text = _str(data['allergiesText']);
+          _previousSurgeriesCtrl.text = _str(data['previousSurgeries']);
+          _admissionWeightCtrl.text = _str(data['admissionWeight']);
+          _todayWeightCtrl.text = _str(data['todayWeight']);
+          _heightCtrl.text = _str(data['height']);
+          _bmiCtrl.text = _str(data['bmi']);
+          _admissionReasonCtrl.text = _str(data['admissionReason']);
+          _medicalDiagnosisCtrl.text = _str(data['medicalDiagnosis']);
+          _complicationsCtrl.text = _str(data['complications']);
+
+          if (data['medications'] is List) {
+            final medsList = data['medications'] as List;
+            _medicationsCtrl.text = medsList.map((m) {
+              if (m is Map) {
+                return '${m['name'] ?? ''} ${m['dose'] ?? ''}'.trim();
+              }
+              return m.toString();
+            }).where((s) => s.isNotEmpty).join(', ');
+          } else if (data['medications'] != null) {
+            _medicationsCtrl.text = data['medications'].toString();
+          }
+
+          _respTypeCtrl.text = _str(data['respType']);
+          _respRhythmCtrl.text = _str(data['respRhythm']);
+          _respRateCtrl.text = _str(data['respRate']);
+          _respPatternCtrl.text = _str(data['respPattern']);
+          _chestExcursionCtrl.text = _str(data['chestExcursion']);
+          _o2PercentCtrl.text = _str(data['o2Percent']);
+          _o2FlowCtrl.text = _str(data['o2Flow']);
+          _o2DeviceCtrl.text = _str(data['o2Device']);
+          _bronchialHygieneCtrl.text = _str(data['bronchialHygiene']);
+          _o2SatCtrl.text = _str(data['o2Sat']);
+          _abgCtrl.text = _str(data['abg']);
+          _incentiveSpirometerCtrl.text = _str(data['incentiveSpirometer']);
+          _mdiInhalerCtrl.text = _str(data['mdiInhaler']);
+          _breathSoundsCtrl.text = _str(data['breathSounds']);
+          _coughCtrl.text = _str(data['cough']);
+          _chestTubeCtrl.text = _str(data['chestTube']);
+
+          if (data['pulseSeries'] is List) {
+            _pulseSeriesCtrl.text = (data['pulseSeries'] as List).join(', ');
+          } else if (data['pulseSeries'] != null) {
+            _pulseSeriesCtrl.text = data['pulseSeries'].toString();
+          }
+
+          _pulseRateCtrl.text = _str(data['pulseRate']);
+          _pulseRhythmCtrl.text = _str(data['pulseRhythm']);
+          _pulseAmplitudeCtrl.text = _str(data['pulseAmplitude']);
+          _heartSoundsCtrl.text = _str(data['heartSounds']);
+          _bpSeriesCtrl.text = _str(data['bpSeries']);
+          _mapCtrl.text = _str(data['map']);
+        });
+      }
+    } catch (_) {
+      // Ignore if no prior record exists or load fails
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  String _str(dynamic val) {
+    if (val == null || val.toString() == 'null' || val.toString() == '—') {
+      return '';
+    }
+    return val.toString();
+  }
 
   @override
   void dispose() {
-    // Dispose all controllers to free resources.
     _departmentCtrl.dispose();
     _admissionDateCtrl.dispose();
     _bedNoCtrl.dispose();
@@ -120,77 +197,92 @@ class _MedicalRecordFormScreenState extends State<MedicalRecordFormScreen> {
     super.dispose();
   }
 
-  /// Validates the form, builds a payload map, and (for now) prints it.
-  ///
-  /// This is the place to plug your API call or Riverpod notifier.
-  void _submit() {
-    if (!_formKey.currentState!.validate()) return;
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate() || _isLoading) return;
 
-    // Parse comma-separated arrays.
-    final meds = _medicationsCtrl.text
-        .split(',')
-        .map((e) => e.trim())
-        .where((e) => e.isNotEmpty)
-        .toList();
-    final pulsesStr = _pulseSeriesCtrl.text
-        .split(',')
-        .map((e) => e.trim())
-        .where((e) => e.isNotEmpty)
-        .toList();
-    final pulses = pulsesStr.map((e) => int.tryParse(e) ?? 0).toList();
+    setState(() => _isLoading = true);
 
-    // Build payload matching the backend medical record schema.
-    final payload = {
-      "id": widget.patientDisplayId,
-      "department": _departmentCtrl.text,
-      "admissionDate": _admissionDateCtrl.text,
-      "bedNo": _bedNoCtrl.text,
-      "allergiesText": _allergiesTextCtrl.text,
-      "previousSurgeries": _previousSurgeriesCtrl.text,
-      "admissionWeight": _admissionWeightCtrl.text,
-      "todayWeight": _todayWeightCtrl.text,
-      "height": _heightCtrl.text,
-      "bmi": _bmiCtrl.text,
-      "admissionReason": _admissionReasonCtrl.text,
-      "medicalDiagnosis": _medicalDiagnosisCtrl.text,
-      "complications": _complicationsCtrl.text,
-      "medications": meds,
-      "respType": _respTypeCtrl.text,
-      "respRhythm": _respRhythmCtrl.text,
-      "respRate": int.tryParse(_respRateCtrl.text) ?? 0,
-      "respPattern": _respPatternCtrl.text,
-      "chestExcursion": _chestExcursionCtrl.text,
-      "o2Percent": int.tryParse(_o2PercentCtrl.text) ?? 0,
-      "o2Flow": int.tryParse(_o2FlowCtrl.text) ?? 0,
-      "o2Device": _o2DeviceCtrl.text,
-      "bronchialHygiene": _bronchialHygieneCtrl.text,
-      "o2Sat": int.tryParse(_o2SatCtrl.text) ?? 0,
-      "abg": _abgCtrl.text,
-      "incentiveSpirometer": _incentiveSpirometerCtrl.text,
-      "mdiInhaler": _mdiInhalerCtrl.text,
-      "breathSounds": _breathSoundsCtrl.text,
-      "cough": _coughCtrl.text,
-      "chestTube": _chestTubeCtrl.text,
-      "pulseSeries": pulses,
-      "pulseRate": int.tryParse(_pulseRateCtrl.text) ?? 0,
-      "pulseRhythm": _pulseRhythmCtrl.text,
-      "pulseAmplitude": _pulseAmplitudeCtrl.text,
-      "heartSounds": _heartSoundsCtrl.text,
-      "bpSeries": _bpSeriesCtrl.text,
-      "map": _mapCtrl.text,
-    };
+    try {
+      final meds = _medicationsCtrl.text
+          .split(',')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
+      final pulsesStr = _pulseSeriesCtrl.text
+          .split(',')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
+      final pulses = pulsesStr.map((e) => int.tryParse(e) ?? 0).toList();
 
-    // For now, just log the payload. Replace with API call later.
-    print(payload);
+      final payload = {
+        "id": widget.patientDisplayId,
+        "department": _departmentCtrl.text,
+        "admissionDate": _admissionDateCtrl.text,
+        "bedNo": _bedNoCtrl.text,
+        "allergiesText": _allergiesTextCtrl.text,
+        "previousSurgeries": _previousSurgeriesCtrl.text,
+        "admissionWeight": _admissionWeightCtrl.text,
+        "todayWeight": _todayWeightCtrl.text,
+        "height": _heightCtrl.text,
+        "bmi": _bmiCtrl.text,
+        "admissionReason": _admissionReasonCtrl.text,
+        "medicalDiagnosis": _medicalDiagnosisCtrl.text,
+        "complications": _complicationsCtrl.text,
+        "medications": meds,
+        "respType": _respTypeCtrl.text,
+        "respRhythm": _respRhythmCtrl.text,
+        "respRate": int.tryParse(_respRateCtrl.text) ?? 0,
+        "respPattern": _respPatternCtrl.text,
+        "chestExcursion": _chestExcursionCtrl.text,
+        "o2Percent": int.tryParse(_o2PercentCtrl.text) ?? 0,
+        "o2Flow": int.tryParse(_o2FlowCtrl.text) ?? 0,
+        "o2Device": _o2DeviceCtrl.text,
+        "bronchialHygiene": _bronchialHygieneCtrl.text,
+        "o2Sat": int.tryParse(_o2SatCtrl.text) ?? 0,
+        "abg": _abgCtrl.text,
+        "incentiveSpirometer": _incentiveSpirometerCtrl.text,
+        "mdiInhaler": _mdiInhalerCtrl.text,
+        "breathSounds": _breathSoundsCtrl.text,
+        "cough": _coughCtrl.text,
+        "chestTube": _chestTubeCtrl.text,
+        "pulseSeries": pulses,
+        "pulseRate": int.tryParse(_pulseRateCtrl.text) ?? 0,
+        "pulseRhythm": _pulseRhythmCtrl.text,
+        "pulseAmplitude": _pulseAmplitudeCtrl.text,
+        "heartSounds": _heartSoundsCtrl.text,
+        "bpSeries": _bpSeriesCtrl.text,
+        "map": _mapCtrl.text,
+      };
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Medical Record form saved!')));
-    Navigator.of(context).pop();
+      final api = ref.read(medicalRecordApiProvider);
+      await api.saveMedicalRecord(payload);
+
+      // Invalidate provider so updated data is loaded across all screens
+      ref.invalidate(patientRecordProvider(widget.patientDisplayId));
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Medical Record form saved successfully!')),
+        );
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to save record: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
-  /// Shared helper to generate a labeled text field with optional
-  /// keyboardType and hint text.
   Widget _buildTextField(
     String label,
     TextEditingController controller, {
@@ -222,8 +314,14 @@ class _MedicalRecordFormScreenState extends State<MedicalRecordFormScreen> {
         title: const Text('Edit Medical Record'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.check),
-            onPressed: _submit,
+            icon: _isLoading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.check),
+            onPressed: _isLoading ? null : _submit,
             tooltip: 'Save',
           ),
         ],
@@ -237,7 +335,6 @@ class _MedicalRecordFormScreenState extends State<MedicalRecordFormScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 0. Patient Context Header
                   Container(
                     margin: const EdgeInsets.only(bottom: 16),
                     padding: const EdgeInsets.symmetric(
@@ -245,22 +342,23 @@ class _MedicalRecordFormScreenState extends State<MedicalRecordFormScreen> {
                       vertical: 12,
                     ),
                     decoration: BoxDecoration(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.primaryContainer.withOpacity(0.3),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primaryContainer
+                          .withValues(alpha: 0.3),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.primary.withOpacity(0.2),
+                        color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withValues(alpha: 0.2),
                       ),
                     ),
                     child: Row(
                       children: [
                         CircleAvatar(
-                          backgroundColor: Theme.of(
-                            context,
-                          ).colorScheme.primary,
+                          backgroundColor:
+                              Theme.of(context).colorScheme.primary,
                           child: const Icon(Icons.person, color: Colors.white),
                         ),
                         const SizedBox(width: 16),
@@ -270,7 +368,9 @@ class _MedicalRecordFormScreenState extends State<MedicalRecordFormScreen> {
                             children: [
                               Text(
                                 widget.patientName,
-                                style: Theme.of(context).textTheme.titleMedium
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium
                                     ?.copyWith(fontWeight: FontWeight.bold),
                               ),
                               Text(
@@ -493,18 +593,24 @@ class _MedicalRecordFormScreenState extends State<MedicalRecordFormScreen> {
                   ),
                   const SizedBox(height: 32),
 
-                  // Bottom save button (duplicates AppBar action for convenience).
                   SizedBox(
                     width: double.infinity,
                     height: 52,
                     child: ElevatedButton.icon(
-                      onPressed: _submit,
+                      onPressed: _isLoading ? null : _submit,
                       icon: _isLoading
-                          ? const CircularProgressIndicator(color: Colors.white)
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
                           : const Icon(Icons.check_circle),
-                      label: const Text(
-                        'Save Form Data',
-                        style: TextStyle(fontSize: 16),
+                      label: Text(
+                        _isLoading ? 'Saving...' : 'Save Form Data',
+                        style: const TextStyle(fontSize: 16),
                       ),
                       style: ElevatedButton.styleFrom(
                         shape: RoundedRectangleBorder(

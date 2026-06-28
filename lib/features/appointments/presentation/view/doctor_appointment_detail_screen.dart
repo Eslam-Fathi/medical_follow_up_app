@@ -290,8 +290,13 @@ class _AppointmentDetailScreenState
                                     MaterialPageRoute(
                                       builder: (_) => MedicalRecordScreen(
                                         user: patientUser,
-                                        patientRecord:
-                                            const {}, // No clinical data in appointment model yet
+                                        // Pass the patient document _id so the
+                                        // API can look up records correctly.
+                                        // appointment.patient.id is the patient
+                                        // profile doc _id (not the user _id).
+                                        patientRecord: {
+                                          '_id': appointment.patient.id,
+                                        },
                                       ),
                                     ),
                                   );

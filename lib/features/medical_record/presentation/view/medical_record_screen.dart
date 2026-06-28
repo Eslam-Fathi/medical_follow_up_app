@@ -1,19 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:medical_follow_up_app/core/utils/responsive.dart';
 import 'package:medical_follow_up_app/core/utils/responsive_wrapper.dart';
 import 'package:medical_follow_up_app/features/auth/data/models/login/login_response.dart';
+import 'package:medical_follow_up_app/features/medical_record/data/api/medical_record_api.dart';
 
-/// Read-only view of a single patient's admission record.
-///
-/// Adapts between mobile/tablet and desktop by:
-/// - constraining max width
-/// - switching some sections to side-by-side on desktop.
-/// A screen that displays a detailed, read-only view of a patient's medical record.
-/// 
-/// It organizes complex clinical data (respiratory, cardiovascular, etc.) into 
-/// distinct, readable cards. The layout is responsive, transitioning to a 
-/// multi-column view on larger screens.
-class MedicalRecordScreen extends StatelessWidget {
+/// View of a single patient's medical record connected to backend persistence.
+class MedicalRecordScreen extends ConsumerWidget {
   final UserDto user;
   final Map<String, dynamic> patientRecord;
 
@@ -24,78 +17,159 @@ class MedicalRecordScreen extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isDesktop = Responsive.isDesktop(context);
 
+    // Prefer patient document _id (from patient profile object).
+    // patientRecord['_id']        → comes from the /api/patients list (patient doc ID ✔)
+    // patientRecord['id']         → alias sometimes present
+    // patientRecord['patientId']  → nested reference
+    // user.id                     → last resort (user auth ID, may not work with API)
+    final patientId = patientRecord['_id']?.toString() ??
+        patientRecord['id']?.toString() ??
+        patientRecord['patientId']?.toString() ??
+        user.id;
+
+    final asyncRecord = ref.watch(patientRecordProvider(patientId));
+
+    // Show error in a SnackBar if the fetch fails (don't silently fail).
+    ref.listen<AsyncValue<Map<String, dynamic>>>(patientRecordProvider(patientId),
+        (_, next) {
+      if (next is AsyncError) {
+        final msg = next.error.toString();
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Could not load record: $msg'),
+              backgroundColor: colorScheme.error,
+            ),
+          );
+        });
+      }
+    });
+
+    final asyncData = asyncRecord.value ?? {};
+
+    // The backend returns demographics (age, gender, bloodType, etc.) nested
+    // inside the medical record's `patientId` object. Promote them to top-level
+    // so the UI can render them without knowing the nesting structure.
+    final nestedPatient = asyncData['patientId'];
+    final patientDemographics = nestedPatient is Map
+        ? Map<String, dynamic>.from(nestedPatient as Map)
+        : <String, dynamic>{};
+
+    // Layer priority (highest wins):
+    // 1. asyncData (the actual medical record fields like department, respRate…)
+    // 2. patientRecord passed via navigation (may already have age/gender from profile)
+    // 3. patientDemographics extracted from nested patientId (lowest priority)
+    final mergedRecord = <String, dynamic>{
+      ...patientDemographics,  // age, gender, bloodType from nested object
+      ...patientRecord,         // profile-page data overrides if present
+      ...asyncData,             // medical record data is highest priority
+    };
+
     return Scaffold(
       appBar: AppBar(title: const Text('Medical Record')),
-      body: Center(
-        child: ResponsiveWrapper(
-          maxWidth: isDesktop ? 1100 : 700,
-          backgroundColor: Colors.transparent,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Main container card that holds all sections.
-                Card(
-                  elevation: 14,
-                  shadowColor: colorScheme.shadow.withOpacity(0.25),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  color: colorScheme.surface,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _buildHeader(context),
-                        const SizedBox(height: 16),
-                        _buildDemographicsCard(context),
-                        const SizedBox(height: 16),
-                        // Layout respiratory + cardio side-by-side on desktop,
-                        // stacked vertically on smaller screens.
-                        if (isDesktop)
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+      body: asyncRecord.isLoading && mergedRecord.isEmpty
+          ? const Center(child: CircularProgressIndicator())
+          : Center(
+              child: ResponsiveWrapper(
+                maxWidth: isDesktop ? 1100 : 700,
+                backgroundColor: Colors.transparent,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Card(
+                        elevation: 14,
+                        shadowColor: colorScheme.shadow.withValues(alpha: 0.25),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        color: colorScheme.surface,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              Expanded(child: _buildRespiratoryCard(context)),
-                              const SizedBox(width: 16),
-                              Expanded(child: _buildCardioCard(context)),
+                              _buildHeader(context, mergedRecord),
+                              const SizedBox(height: 16),
+                              _buildDemographicsCard(context, mergedRecord),
+                              const SizedBox(height: 16),
+                              if (isDesktop)
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(
+                                      child: _buildRespiratoryCard(
+                                          context, mergedRecord),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: _buildCardioCard(
+                                          context, mergedRecord),
+                                    ),
+                                  ],
+                                )
+                              else ...[
+                                _buildRespiratoryCard(context, mergedRecord),
+                                const SizedBox(height: 16),
+                                _buildCardioCard(context, mergedRecord),
+                              ],
                             ],
-                          )
-                        else ...[
-                          _buildRespiratoryCard(context),
-                          const SizedBox(height: 16),
-                          _buildCardioCard(context),
-                        ],
-                      ],
-                    ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
-        ),
-      ),
     );
   }
 
-  // ---------------- HELPERS ----------------
-
-  /// Normalizes a field value from [patientRecord].
-  ///
-  /// Returns "—" when the value is null or empty.
   String _val(dynamic value) {
     if (value == null || value.toString().trim().isEmpty) return '—';
     return value.toString();
   }
 
-  /// Placeholder widget for entirely empty sections.
+  /// Parses an ISO-8601 date string (e.g. "2026-05-05T00:00:00.000Z") and
+  /// returns a human-readable string like "05 May 2026".
+  /// Falls back to [_val] if the value is null, empty, or not parseable.
+  String _fmtDate(dynamic value) {
+    if (value == null || value.toString().trim().isEmpty) return '—';
+    try {
+      final dt = DateTime.parse(value.toString()).toLocal();
+      const months = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      ];
+      return '${dt.day.toString().padLeft(2, '0')} '
+          '${months[dt.month - 1]} ${dt.year}';
+    } catch (_) {
+      return _val(value); // not a parseable date, show as-is
+    }
+  }
+
+  String _formatMeds(dynamic meds) {
+    if (meds == null) return '—';
+    if (meds is List) {
+      if (meds.isEmpty) return '—';
+      return meds.map((m) {
+        if (m is Map) {
+          final name = m['name']?.toString() ?? '';
+          final dose = m['dose']?.toString() ?? '';
+          return '$name $dose'.trim();
+        }
+        return m.toString();
+      }).where((s) => s.isNotEmpty).join(', ');
+    }
+    return meds.toString();
+  }
+
   Widget _emptySection() {
     return const Padding(
       padding: EdgeInsets.symmetric(vertical: 8),
@@ -112,13 +186,10 @@ class MedicalRecordScreen extends StatelessWidget {
     );
   }
 
-  // ---------------- HEADER ----------------
-
-  /// Top header: avatar initials + patient name + display ID.
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(BuildContext context, Map<String, dynamic> record) {
     final theme = Theme.of(context);
     final name = user.name;
-    final id = patientRecord['displayId'] ?? patientRecord['id'] ?? '—';
+    final id = record['displayId'] ?? record['id'] ?? '—';
 
     String initialsFromName(String n) {
       final parts = n
@@ -169,89 +240,51 @@ class MedicalRecordScreen extends StatelessWidget {
     );
   }
 
-  // ---------------- DEMOGRAPHICS ----------------
-
-  /// General patient overview section (department, gender, age, etc.).
-  Widget _buildDemographicsCard(BuildContext context) {
+  Widget _buildDemographicsCard(
+      BuildContext context, Map<String, dynamic> record) {
     return _sectionCard(
       context,
       title: 'Patient Overview',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Quick facts as chips (wrap to next line when space is tight).
           Wrap(
             spacing: 12,
             runSpacing: 8,
             children: [
-              _infoChip(
-                context,
-                'Department',
-                _val(patientRecord['department']),
-              ),
-              _infoChip(context, 'Gender', _val(patientRecord['gender'])),
-              _infoChip(context, 'Age', '${_val(patientRecord['age'])} yrs'),
-              _infoChip(
-                context,
-                'Admission',
-                _val(patientRecord['admissionDate']),
-              ),
-              _infoChip(context, 'Bed', _val(patientRecord['bedNo'])),
-              _infoChip(context, 'Blood', _val(patientRecord['bloodType'])),
+              _infoChip(context, 'Department', _val(record['department'])),
+              _infoChip(context, 'Gender', _val(record['gender'])),
+              _infoChip(context, 'Age', '${_val(record['age'])} yrs'),
+              _infoChip(context, 'Admission', _fmtDate(record['admissionDate'])),
+              _infoChip(context, 'Bed', _val(record['bedNo'])),
+              _infoChip(context, 'Blood', _val(record['bloodType'])),
             ],
           ),
           const SizedBox(height: 12),
-          _twoColRow(
-            context,
-            'Allergies',
-            _val(patientRecord['allergiesText']),
-          ),
-          _twoColRow(
-            context,
-            'Surgeries',
-            _val(patientRecord['previousSurgeries']),
-          ),
+          _twoColRow(context, 'Allergies', _val(record['allergiesText'])),
+          _twoColRow(context, 'Surgeries', _val(record['previousSurgeries'])),
           const SizedBox(height: 8),
-          _twoColRow(
-            context,
-            'Adm. Weight',
-            _val(patientRecord['admissionWeight']),
-          ),
-          _twoColRow(
-            context,
-            'Today Weight',
-            _val(patientRecord['todayWeight']),
-          ),
-          _twoColRow(context, 'Height', _val(patientRecord['height'])),
-          _twoColRow(context, 'BMI', _val(patientRecord['bmi'])),
+          _twoColRow(context, 'Adm. Weight', _val(record['admissionWeight'])),
+          _twoColRow(context, 'Today Weight', _val(record['todayWeight'])),
+          _twoColRow(context, 'Height', _val(record['height'])),
+          _twoColRow(context, 'BMI', _val(record['bmi'])),
           const SizedBox(height: 8),
-          _twoColRow(context, 'Reason', _val(patientRecord['admissionReason'])),
-          _twoColRow(
-            context,
-            'Diagnosis',
-            _val(patientRecord['medicalDiagnosis']),
-          ),
-          _twoColRow(
-            context,
-            'Complications',
-            _val(patientRecord['complications']),
-          ),
+          _twoColRow(context, 'Reason', _val(record['admissionReason'])),
+          _twoColRow(context, 'Diagnosis', _val(record['medicalDiagnosis'])),
+          _twoColRow(context, 'Complications', _val(record['complications'])),
+          _twoColRow(context, 'Medications', _formatMeds(record['medications'])),
         ],
       ),
     );
   }
 
-  // ---------------- RESPIRATORY ----------------
-
-  /// Respiratory system section: type, rate, O2, therapy details, etc.
-  Widget _buildRespiratoryCard(BuildContext context) {
+  Widget _buildRespiratoryCard(
+      BuildContext context, Map<String, dynamic> record) {
     final theme = Theme.of(context);
 
-    // Check if the whole section is empty.
-    final isEmpty =
-        patientRecord['respType'] == null &&
-        patientRecord['respRate'] == null &&
-        patientRecord['o2Sat'] == null;
+    final isEmpty = record['respType'] == null &&
+        record['respRate'] == null &&
+        record['o2Sat'] == null;
 
     return _sectionCard(
       context,
@@ -265,16 +298,16 @@ class MedicalRecordScreen extends StatelessWidget {
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    _infoChip(context, 'Type', _val(patientRecord['respType'])),
+                    _infoChip(context, 'Type', _val(record['respType'])),
                     _infoChip(
                       context,
                       'Rate',
-                      '${_val(patientRecord['respRate'])} /min',
+                      '${_val(record['respRate'])} /min',
                     ),
                     _infoChip(
                       context,
                       'O2 Sat',
-                      '${_val(patientRecord['o2Sat'])} %',
+                      '${_val(record['o2Sat'])} %',
                     ),
                   ],
                 ),
@@ -285,38 +318,34 @@ class MedicalRecordScreen extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                _twoColRow(context, 'Device', _val(patientRecord['o2Device'])),
+                _twoColRow(context, 'Device', _val(record['o2Device'])),
                 _twoColRow(
                   context,
                   'Percent/Flow',
-                  '${_val(patientRecord['o2Percent'])}% / ${_val(patientRecord['o2Flow'])}L',
+                  '${_val(record['o2Percent'])}% / ${_val(record['o2Flow'])}L',
                 ),
                 const SizedBox(height: 8),
                 _twoColRow(
                   context,
                   'Breath Sounds',
-                  _val(patientRecord['breathSounds']),
+                  _val(record['breathSounds']),
                 ),
-                _twoColRow(context, 'Cough', _val(patientRecord['cough'])),
+                _twoColRow(context, 'Cough', _val(record['cough'])),
                 _twoColRow(
                   context,
                   'Chest Tube',
-                  _val(patientRecord['chestTube']),
+                  _val(record['chestTube']),
                 ),
               ],
             ),
     );
   }
 
-  // ---------------- CARDIOVASCULAR ----------------
-
-  /// Cardiovascular system section: pulses, BP series, MAP, etc.
-  Widget _buildCardioCard(BuildContext context) {
-    final pulseSeries = (patientRecord['pulseSeries'] as List?) ?? const [];
-    final isEmpty =
-        pulseSeries.isEmpty &&
-        patientRecord['pulseRate'] == null &&
-        patientRecord['pulseRhythm'] == null;
+  Widget _buildCardioCard(BuildContext context, Map<String, dynamic> record) {
+    final pulseSeries = (record['pulseSeries'] as List?) ?? const [];
+    final isEmpty = pulseSeries.isEmpty &&
+        record['pulseRate'] == null &&
+        record['pulseRhythm'] == null;
 
     return _sectionCard(
       context,
@@ -347,37 +376,26 @@ class MedicalRecordScreen extends StatelessWidget {
                 _twoColRow(
                   context,
                   'Current Rate',
-                  '${_val(patientRecord['pulseRate'])} bpm',
+                  '${_val(record['pulseRate'])} bpm',
                 ),
-                _twoColRow(
-                  context,
-                  'Rhythm',
-                  _val(patientRecord['pulseRhythm']),
-                ),
+                _twoColRow(context, 'Rhythm', _val(record['pulseRhythm'])),
                 _twoColRow(
                   context,
                   'Amplitude',
-                  _val(patientRecord['pulseAmplitude']),
+                  _val(record['pulseAmplitude']),
                 ),
                 _twoColRow(
                   context,
                   'Heart Sounds',
-                  _val(patientRecord['heartSounds']),
+                  _val(record['heartSounds']),
                 ),
-                _twoColRow(
-                  context,
-                  'BP Series',
-                  _val(patientRecord['bpSeries']),
-                ),
-                _twoColRow(context, 'MAP', _val(patientRecord['map'])),
+                _twoColRow(context, 'BP Series', _val(record['bpSeries'])),
+                _twoColRow(context, 'MAP', _val(record['map'])),
               ],
             ),
     );
   }
 
-  // ---------------- UI COMPONENTS ----------------
-
-  /// Shared card wrapper for each logical section (overview, resp, cardio).
   Widget _sectionCard(
     BuildContext context, {
     required String title,
@@ -387,7 +405,7 @@ class MedicalRecordScreen extends StatelessWidget {
 
     return Card(
       elevation: 0,
-      color: theme.colorScheme.surfaceVariant.withOpacity(0.2),
+      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -408,18 +426,16 @@ class MedicalRecordScreen extends StatelessWidget {
     );
   }
 
-  /// Small pill-like chip for quick facts (label + value).
   Widget _infoChip(BuildContext context, String label, String value) {
     final theme = Theme.of(context);
 
     return Chip(
       label: Text('$label: $value', style: theme.textTheme.bodySmall),
-      backgroundColor: theme.colorScheme.surfaceVariant.withOpacity(0.6),
+      backgroundColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
       visualDensity: VisualDensity.compact,
     );
   }
 
-  /// Label on the left, value on the right, used for most fields.
   Widget _twoColRow(BuildContext context, String label, String value) {
     final theme = Theme.of(context);
 

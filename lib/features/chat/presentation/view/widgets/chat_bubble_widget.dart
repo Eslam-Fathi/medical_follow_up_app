@@ -30,7 +30,7 @@ class ChatBubbleWidget extends StatelessWidget {
         return Transform.scale(
           scale: value,
           alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-          child: Opacity(opacity: value, child: child),
+          child: Opacity(opacity: value.clamp(0.0, 1.0), child: child),
         );
       },
       child: Padding(
