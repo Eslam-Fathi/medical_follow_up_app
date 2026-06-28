@@ -63,9 +63,14 @@ class ChatBotNotifier extends StateNotifier<ChatBotState> {
     );
 
     try {
-      final apiKey = dotenv.env['GEMINI_API_KEY'];
-      if (apiKey == null || apiKey.isEmpty || apiKey == 'YOUR_API_KEY_HERE') {
-        throw Exception('Please set a valid Gemini API key in the .env file.');
+      // 1. Try dotenv (works when .env is bundled — local dev).
+      // 2. Fall back to dart-define (works on Vercel via build env vars).
+      final apiKey = (dotenv.env['GEMINI_API_KEY']?.isNotEmpty == true
+              ? dotenv.env['GEMINI_API_KEY']
+              : null) ??
+          const String.fromEnvironment('GEMINI_API_KEY');
+      if (apiKey.isEmpty || apiKey == 'YOUR_API_KEY_HERE') {
+        throw Exception('Please set a valid Gemini API key in the .env file or as a Vercel environment variable.');
       }
 
       final model = GenerativeModel(

@@ -58,11 +58,23 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Load key=value pairs from the `.env` file into `dotenv.env`.
-  // Access them with: `dotenv.env['KEY_NAME']`
-  await dotenv.load(fileName: ".env");
+  // Non-fatal: on web deployments (e.g. Vercel) the .env file is gitignored
+  // and won't exist in the build. We fall back gracefully and let the chatbot
+  // read its key via --dart-define=GEMINI_API_KEY=... at build time instead.
+  try {
+    await dotenv.load(fileName: '.env');
+  } catch (_) {
+    // .env not found or not bundled — harmless, chatbot will use dart-define.
+  }
 
   // Initialize local notifications (Android channel, iOS permissions, timezone).
-  await NotificationService().init();
+  // Non-fatal: flutter_local_notifications is not supported on web and will
+  // throw on Vercel. We catch and continue so the rest of the app still loads.
+  try {
+    await NotificationService().init();
+  } catch (_) {
+    // Notifications not available on this platform — continue without them.
+  }
 
   // ProviderScope is the Riverpod dependency injection container.
   // All providers are created lazily within this scope.
