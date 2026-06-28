@@ -255,12 +255,24 @@ class _StartPointState extends ConsumerState<StartPoint> {
           // Pre-load pending doctors so the admin dashboard renders immediately.
           await ref.read(pendingDoctorsProvider.future);
         } else {
-          // For patients and doctors: pre-load profile and appointments in parallel.
-          // `Future.wait` runs both futures concurrently, saving time vs. sequential.
+          // Invalidate both providers to guarantee a fresh build now that
+          // loginResponse is confirmed. Without this, profileProvider may still
+          // hold a Completer().future built before checkAuthStatus ran, which
+          // would cause Future.wait to hang forever on the splash screen.
+          ref.invalidate(profileProvider);
+          ref.invalidate(appointmentsProvider);
+
+          // For patients and doctors: pre-load profile and appointments in
+          // parallel. A 15-second timeout guards against any infinite hang.
           await Future.wait([
             ref.read(profileProvider.future),
             ref.read(appointmentsProvider.future),
-          ]);
+          ]).timeout(
+            const Duration(seconds: 15),
+            onTimeout: () {
+              throw Exception('Startup data load timed out — check connectivity.');
+            },
+          );
 
           // Warm up the chat cache in the background (fire-and-forget).
           // This pre-loads recent conversations so the chat tab opens instantly.
